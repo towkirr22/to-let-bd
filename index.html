@@ -354,7 +354,7 @@
                   <input id="verify-nid-back" required type="file" accept="image/jpeg,image/png,image/webp" class="mt-1 block w-full p-2 border rounded-xl bg-white">
                 </label>
                 <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                  নিরাপত্তা: NID নম্বর ও পরিচয়পত্রের ছবি সরাসরি Public Storage বা Browser থেকে Database-এ পাঠানো হবে না। নিরাপদ server-side encryption ও private upload endpoint এখনো সংযুক্ত হয়নি; সেটি তৈরি না হওয়া পর্যন্ত Submit বন্ধ থাকবে। আসল NID এখন দেবেন না।
+                  নিরাপত্তা: NID নম্বর server-side AES-256-GCM encryption করে Database-এ রাখা হবে এবং ছবি private verification bucket-এ যাবে। প্রতিটি ছবি সর্বোচ্চ ৫ MB; Admin ছাড়া অন্য কেউ দেখতে পারবে না। Backend চালু হওয়ার আগে আসল NID জমা দেবেন না।
                 </div>
                 <button type="submit" class="w-full py-3 rounded-xl bg-emerald-700 text-white font-extrabold">NID Verification-এর জন্য আবেদন করুন</button>
               </form>
@@ -380,8 +380,8 @@
                         <!-- NID verification is a separate workflow; property ads do not require NID fields here. -->
                         <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                           <i class="fa-solid fa-shield-check mr-1"></i>
-                          NID যাচাই আলাদা। বিজ্ঞাপন জমা দিতে NID ফর্ম পূরণ করতে হবে না।
-                          <button type="button" onclick="switchTab('owner-verification')" class="ml-1 font-extrabold underline">শুধু NID যাচাই করতে এখানে ক্লিক করুন</button>
+                          NID Verification সম্পন্ন না হলে আপনার বাড়ি ভাড়ার বিজ্ঞাপন অনুমোদন করা হবে না।
+                          
                         </div>
 
                         <!-- Ad Primary Info -->
@@ -1186,9 +1186,38 @@
 
         async function handleOwnerVerificationSubmit(e){
             e.preventDefault();
+            if(!window.toletSupabase){alert('Backend সংযোগ পাওয়া যায়নি।');return;}
             const {data:{user},error}=await toletSupabase.auth.getUser();
             if(error||!user){openOwnerAuth();alert('NID Verification-এর আবেদন করতে আগে Login করুন।');return;}
-            alert('NID Verification ফর্ম আলাদা করা হয়েছে। তবে নিরাপদ server-side encryption ও private file upload endpoint এখনো যুক্ত হয়নি। আপনার NID তথ্য জমা হয়নি—নিরাপদ Backend তৈরি না হওয়া পর্যন্ত Submit করা যাবে না।');
+            const form=byId('owner-verification-form');
+            const name=byId('verify-nid-name').value.trim();
+            const dob=byId('verify-nid-dob').value;
+            const nid=byId('verify-nid-number').value.trim();
+            const phone=byId('verify-nid-phone').value.trim();
+            const selfie=byId('verify-nid-selfie').files[0];
+            const front=byId('verify-nid-front').files[0];
+            const back=byId('verify-nid-back').files[0];
+            if(!/^(?:[0-9]{10}|[0-9]{13}|[0-9]{17})$/.test(nid)){alert('NID নম্বর ১০, ১৩ অথবা ১৭ ডিজিট হতে হবে।');return;}
+            const files=[selfie,front,back];
+            if(files.some(x=>!x)){alert('নিজের ছবি এবং NID-এর দুই পাশের ছবি নির্বাচন করুন।');return;}
+            const allowed=['image/jpeg','image/png','image/webp'];
+            if(files.some(x=>!allowed.includes(x.type)||x.size>5*1024*1024)){alert('প্রতিটি ছবি JPG, PNG বা WebP হতে হবে এবং ৫ MB-এর কম হতে হবে।');return;}
+            const btn=form.querySelector('button[type="submit"]');
+            const old=btn.textContent;btn.disabled=true;btn.textContent='নিরাপদে জমা হচ্ছে…';
+            try{
+              const body=new FormData();
+              body.append('nid_name',name);body.append('date_of_birth',dob);body.append('nid_number',nid);body.append('phone',phone);
+              body.append('selfie',selfie);body.append('nid_front',front);body.append('nid_back',back);
+              const {data,error:fnError}=await toletSupabase.functions.invoke('submit-owner-verification',{body});
+              if(fnError)throw fnError;
+              if(data?.error)throw new Error(data.error);
+              form.reset();
+              alert('আপনার NID Verification আবেদন নিরাপদে জমা হয়েছে। Admin যাচাই করার পর ফলাফল জানানো হবে।');
+              switchTab('home');
+            }catch(err){
+              console.error('NID verification submit failed',err);
+              alert('NID আবেদন জমা হয়নি: '+(err.message||'আবার চেষ্টা করুন')+'। Backend Function ও Secrets ঠিকভাবে সেট করা আছে কি না পরীক্ষা করুন।');
+            }finally{btn.disabled=false;btn.textContent=old;}
         }
 
         async function handlePostAdSubmit(e) {
