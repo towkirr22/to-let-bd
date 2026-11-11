@@ -1270,8 +1270,8 @@
             const div=byId('postDivision').selectedOptions[0]?.textContent||'',dist=byId('postDistrict').selectedOptions[0]?.textContent||'',upa=byId('postUpazila').selectedOptions[0]?.textContent||'',area=byId('postArea').selectedIndex>0?byId('postArea').selectedOptions[0].textContent:'';
             const coords=(id)=>{const n=Number(byId(id)?.textContent);return Number.isFinite(n)?n:null;};
             const lat=coords('picked-lat'),lng=coords('picked-lng');
-            const fullName=byId('post-owner-name').value.trim()||user.user_metadata?.full_name||'বাড়ির মালিক';
-            const phone=byId('post-owner-phone').value.trim()||user.phone||'';
+            const fullName=byId('post-owner-name')?.value?.trim()||user.user_metadata?.full_name||'বাড়ির মালিক';
+            const phone=byId('post-owner-phone')?.value?.trim()||user.phone||'';
             const payload={owner_id:user.id,title:byId('post-title').value.trim(),category:byId('post-category').value,price:Number(byId('post-price').value),description:byId('post-description').value.trim(),division:div,district:dist,upazila:upa,area,address:[area,upa,dist,div,byId('post-location').value.trim()].filter(Boolean).join(', '),bedrooms:Number(byId('post-beds').value||0),bathrooms:Number(byId('post-baths').value||0),rent_gender:byId('post-rent-gender').value,available_from:byId('post-available-from').value||null,latitude:lat,longitude:lng,owner_display_name:fullName,owner_contact_phone:phone,status:'pending'};
             const submit=e.submitter||document.querySelector('#post-ad-form button[type="submit"]');if(submit){submit.disabled=true;submit.dataset.oldText=submit.textContent;submit.textContent='বিজ্ঞাপন সংরক্ষণ হচ্ছে…';}
             try{
