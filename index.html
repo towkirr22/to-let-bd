@@ -206,6 +206,9 @@
                 </button>
             </nav>
 
+            <!-- Separate NID verification entry -->
+            <button type="button" onclick="switchTab('owner-verification')" class="hidden sm:inline-flex text-sm font-bold text-emerald-700 px-3 py-2 rounded-lg border border-emerald-200">NID যাচাই</button>
+
             <!-- Right CTA Button -->
             <div class="flex items-center gap-3">
                 <button onclick="switchTab('post-ad')" class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 text-sm flex items-center gap-2 hover:shadow-lg transition">
@@ -319,6 +322,47 @@
         </section>
 
 
+        <!-- Standalone owner identity verification page -->
+        <section id="tab-owner-verification" class="tab-page hidden py-8">
+          <div class="container mx-auto px-4 max-w-2xl">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-200">
+              <div class="text-center border-b pb-5 mb-6">
+                <span class="inline-flex rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-bold">আলাদা পরিচয় যাচাই</span>
+                <h2 class="text-2xl font-extrabold mt-3">শুধু NID Verification আবেদন</h2>
+                <p class="text-sm text-slate-500 mt-2">বাড়ি ভাড়ার বিজ্ঞাপন না দিয়েও আলাদাভাবে পরিচয় যাচাইয়ের আবেদন করতে পারবেন।</p>
+              </div>
+              <form id="owner-verification-form" onsubmit="handleOwnerVerificationSubmit(event)" class="space-y-4">
+                <label class="block text-sm font-bold">NID অনুযায়ী পূর্ণ নাম *
+                  <input id="verify-nid-name" required autocomplete="name" class="mt-1 w-full p-3 border rounded-xl" placeholder="আপনার পূর্ণ নাম">
+                </label>
+                <label class="block text-sm font-bold">জন্মতারিখ *
+                  <input id="verify-nid-dob" type="date" required class="mt-1 w-full p-3 border rounded-xl">
+                </label>
+                <label class="block text-sm font-bold">NID নম্বর *
+                  <input id="verify-nid-number" required inputmode="numeric" minlength="10" maxlength="17" pattern="[0-9]{10}|[0-9]{13}|[0-9]{17}" class="mt-1 w-full p-3 border rounded-xl" placeholder="১০ / ১৩ / ১৭ ডিজিট">
+                </label>
+                <label class="block text-sm font-bold">যোগাযোগের ফোন নম্বর *
+                  <input id="verify-nid-phone" required type="tel" autocomplete="tel" class="mt-1 w-full p-3 border rounded-xl" placeholder="01XXXXXXXXX">
+                </label>
+                <label class="block text-sm font-bold">নিজের সাম্প্রতিক ছবি *
+                  <input id="verify-nid-selfie" required type="file" accept="image/jpeg,image/png,image/webp" class="mt-1 block w-full p-2 border rounded-xl bg-white">
+                </label>
+                <label class="block text-sm font-bold">NID-এর সামনের ছবি *
+                  <input id="verify-nid-front" required type="file" accept="image/jpeg,image/png,image/webp" class="mt-1 block w-full p-2 border rounded-xl bg-white">
+                </label>
+                <label class="block text-sm font-bold">NID-এর পেছনের ছবি *
+                  <input id="verify-nid-back" required type="file" accept="image/jpeg,image/png,image/webp" class="mt-1 block w-full p-2 border rounded-xl bg-white">
+                </label>
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                  নিরাপত্তা: NID নম্বর ও পরিচয়পত্রের ছবি সরাসরি Public Storage বা Browser থেকে Database-এ পাঠানো হবে না। নিরাপদ server-side encryption ও private upload endpoint এখনো সংযুক্ত হয়নি; সেটি তৈরি না হওয়া পর্যন্ত Submit বন্ধ থাকবে। আসল NID এখন দেবেন না।
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-700 text-white font-extrabold">NID Verification-এর জন্য আবেদন করুন</button>
+              </form>
+              <button type="button" onclick="switchTab('post-ad')" class="mt-4 text-sm font-bold text-emerald-700">বাড়ির বিজ্ঞাপন দিতে চান? এখানে যান →</button>
+            </div>
+          </div>
+        </section>
+
         <!-- SECTION 3: POST AD FORM WIZARD -->
         <section id="tab-post-ad" class="tab-page hidden py-8">
             <div class="container mx-auto px-4 max-w-3xl">
@@ -327,33 +371,23 @@
                     <div class="text-center mb-8 border-b pb-6">
                         <div class="flex justify-center mb-3"><button type="button" onclick="openOwnerAuth()" class="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-2"><i class="fa-solid fa-user mr-1"></i> ইমেইল দিয়ে লগইন / রেজিস্ট্রেশন</button></div><span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">বাড়িওয়ালা ও মেস মালিকদের জন্য</span>
                         <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">বাসা ভাড়ার নতুন বিজ্ঞাপন জমা দিন</h2>
+                        <button type="button" onclick="switchTab('owner-verification')" class="mt-3 text-sm font-bold text-emerald-700 underline">শুধু NID Verification করতে চান?</button>
                         <p class="text-slate-500 text-sm mt-1">পরিচয় যাচাইয়ের তথ্য ও বাসার সম্পূর্ণ বিবরণ দিন। NID নম্বর/ছবি কখনো পাবলিক পেজে দেখানো হবে না।</p>
                     </div>
 
                     <form id="post-ad-form" onsubmit="handlePostAdSubmit(event)" class="space-y-6">
                         
-                        <!-- Private identity verification -->
-                        <div class="bg-amber-50 p-5 rounded-xl border border-amber-200 space-y-4">
-                            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2 border-b border-amber-200 pb-2"><i class="fa-solid fa-user-shield text-amber-600"></i> ১. মালিকের পরিচয় যাচাই (গোপনীয়)</h3>
-                            <p class="text-xs text-slate-600">আপনার পূর্ণ নাম, জন্মতারিখ, NID নম্বর, নিজের ছবি এবং NID-এর ছবি যাচাইয়ের জন্য প্রয়োজন। এগুলো কোনো অবস্থাতেই বিজ্ঞাপনের Details পেজে প্রকাশ করা হবে না।</p>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <label class="text-xs font-bold text-slate-700">NID অনুযায়ী পূর্ণ নাম *<input type="text" id="post-owner-name" autocomplete="name" placeholder="আপনার পূর্ণ নাম" class="mt-1 w-full p-2.5 bg-white border rounded-lg text-sm"></label>
-                                <label class="text-xs font-bold text-slate-700">জন্মতারিখ *<input type="date" id="post-owner-dob" class="mt-1 w-full p-2.5 bg-white border rounded-lg text-sm"></label>
-                                <label class="text-xs font-bold text-slate-700">NID নম্বর *<input type="text" id="post-owner-nid" inputmode="numeric" minlength="10" maxlength="17" pattern="[0-9]{10}|[0-9]{13}|[0-9]{17}" placeholder="১০ / ১৩ / ১৭ ডিজিট" class="mt-1 w-full p-2.5 bg-white border rounded-lg text-sm"></label>
-                                <label class="text-xs font-bold text-slate-700">যোগাযোগের ফোন নম্বর *<input type="tel" id="post-owner-phone" required autocomplete="tel" placeholder="01XXXXXXXXX" class="mt-1 w-full p-2.5 bg-white border rounded-lg text-sm"></label>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <label class="text-xs font-bold text-slate-700">নিজের সাম্প্রতিক ছবি *<input type="file" id="post-owner-selfie" accept="image/*" class="mt-1 block w-full text-xs bg-white border rounded-lg p-2"></label>
-                                <label class="text-xs font-bold text-slate-700">NID-এর সামনের ছবি *<input type="file" id="post-owner-nid-front" accept="image/*" class="mt-1 block w-full text-xs bg-white border rounded-lg p-2"></label>
-                                <label class="text-xs font-bold text-slate-700">NID-এর পেছনের ছবি *<input type="file" id="post-owner-nid-back" accept="image/*" class="mt-1 block w-full text-xs bg-white border rounded-lg p-2"></label>
-                            </div>
-                            <p class="text-[11px] text-amber-800">নিরাপত্তার জন্য এই পর্যায়ে NID নম্বর বা NID/সেলফি ফাইল জমা দেবেন না। Owner Verification-এর জন্য আলাদা নিরাপদ server-side encryption ও private review workflow তৈরি হলে এটি চালু হবে।</p>
+                        <!-- NID verification is a separate workflow; property ads do not require NID fields here. -->
+                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                          <i class="fa-solid fa-shield-check mr-1"></i>
+                          NID যাচাই আলাদা। বিজ্ঞাপন জমা দিতে NID ফর্ম পূরণ করতে হবে না।
+                          <button type="button" onclick="switchTab('owner-verification')" class="ml-1 font-extrabold underline">শুধু NID যাচাই করতে এখানে ক্লিক করুন</button>
                         </div>
 
                         <!-- Ad Primary Info -->
                         <div class="space-y-4">
                             <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2 border-b pb-2">
-                                <i class="fa-solid fa-circle-info text-emerald-600"></i> ২. বিজ্ঞাপনের প্রাথমিক বিবরণ
+                                <i class="fa-solid fa-circle-info text-emerald-600"></i> ১. বিজ্ঞাপনের প্রাথমিক বিবরণ
                             </h3>
                             
                             <div>
@@ -399,7 +433,7 @@
                         <!-- Interactive Map Location Picker -->
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">
-                                <i class="fa-solid fa-map-location-dot text-red-500"></i> ৩. ম্যাপে বাসার সুনির্দিষ্ট অবস্থান পিন করুন *
+                                <i class="fa-solid fa-map-location-dot text-red-500"></i> ২. ম্যাপে বাসার সুনির্দিষ্ট অবস্থান পিন করুন *
                             </label>
                             <p class="text-xs text-slate-500">নিচের মানচিত্রে ক্লিক করে বাসাটির সুনির্দিষ্ট জায়গা নির্দেশ করুন (Lat/Lng অটোমেটিক সেট হবে):</p>
                             <div id="post-map-picker" class="h-64 w-full rounded-xl border border-slate-300"></div>
@@ -411,7 +445,7 @@
 
                         <!-- Separate photo and video attachments -->
                         <div class="space-y-4">
-                            <h3 class="font-bold text-slate-900 text-sm border-b pb-2"><i class="fa-solid fa-photo-film text-emerald-600 mr-1"></i> ৪. ছবি ও ভিডিও সংযুক্ত করুন</h3>
+                            <h3 class="font-bold text-slate-900 text-sm border-b pb-2"><i class="fa-solid fa-photo-film text-emerald-600 mr-1"></i> ৩. ছবি ও ভিডিও সংযুক্ত করুন</h3>
                             <div class="rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 p-4 space-y-2">
                                 <label class="block text-sm font-bold text-slate-800"><i class="fa-solid fa-images text-emerald-700 mr-1"></i> শুধু বাসার ছবি সংযুক্ত করুন</label>
                                 <input type="file" id="post-property-photos" accept="image/jpeg,image/png,image/webp" multiple class="block w-full text-sm bg-white border rounded-lg p-2">
@@ -1149,6 +1183,13 @@
         async function demoGoogleSignIn(){if(!window.toletSupabase){alert('Backend সংযোগ পাওয়া যায়নি।');return;}const {error}=await toletSupabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin}});if(error)alert(error.message);}
         async function ownerLogout(){if(!window.toletSupabase)return;const {error}=await toletSupabase.auth.signOut();if(error){alert('Logout হয়নি: '+error.message);return;}window.toletOwnerSession=null;window.toletOwnerProperties=[];closeAccountDashboard();closeOwnerAuth();alert('Logout সফল হয়েছে।');await loadOwnerSession();}
 
+
+        async function handleOwnerVerificationSubmit(e){
+            e.preventDefault();
+            const {data:{user},error}=await toletSupabase.auth.getUser();
+            if(error||!user){openOwnerAuth();alert('NID Verification-এর আবেদন করতে আগে Login করুন।');return;}
+            alert('NID Verification ফর্ম আলাদা করা হয়েছে। তবে নিরাপদ server-side encryption ও private file upload endpoint এখনো যুক্ত হয়নি। আপনার NID তথ্য জমা হয়নি—নিরাপদ Backend তৈরি না হওয়া পর্যন্ত Submit করা যাবে না।');
+        }
 
         async function handlePostAdSubmit(e) {
             e.preventDefault();
