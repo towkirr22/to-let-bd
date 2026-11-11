@@ -1075,7 +1075,7 @@
             const catNames = {Family:'পরিবারের বাসা', Bachelor:'মেস/হোস্টেল', Sublet:'সাবলেট', Commercial:'অফিস', Hotel:'হোটেল / গেস্ট হাউস'};
             const priceUnit = prop.category === 'Hotel' ? '/দিন' : '/মাস';
             return `
-              <article class="home-property-card" role="button" tabindex="0" onclick="openPropertyDetails(${prop.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyDetails(${prop.id})}">
+              <article class="home-property-card" role="button" tabindex="0" onclick='openPropertyDetails(${JSON.stringify(String(prop.id))})' onkeydown='if(event.key==="Enter"||event.key===" "){event.preventDefault();openPropertyDetails(${JSON.stringify(String(prop.id))})}'>
                 <div class="home-property-image">
                   <img src="${prop.image}" alt="${prop.title}" loading="lazy">
                   <span class="home-property-tag">${catNames[prop.category] || prop.category}</span>
@@ -1146,8 +1146,8 @@
 
         <!-- Property Details View Launcher & Leaflet Setup -->
         function openPropertyDetails(id) {
-            const prop = properties.find(p => p.id === id);
-            if (!prop) return;
+            const prop = properties.find(p => String(p.id) === String(id));
+            if (!prop) { console.warn('Property not found for details:', id); return; }
 
             activePropertyId = id;
             document.getElementById('detail-title').innerText = prop.title;
@@ -1161,8 +1161,10 @@
             document.getElementById('detail-baths').innerText = prop.bathrooms;
             document.getElementById('detail-owner-name').innerText = prop.ownerName;
             lightboxImages=(prop.images&&prop.images.length?prop.images:[prop.image]).filter(Boolean);
-            document.getElementById('detail-main-img').src=lightboxImages[0]||prop.image;
-            document.getElementById('detail-main-img').onclick=()=>openPhotoLightbox(0);
+            const mainPhoto=document.getElementById('detail-main-img');
+            mainPhoto.src=lightboxImages[0]||prop.image||'';
+            mainPhoto.alt=prop.title||'বাসার ছবি';
+            mainPhoto.onclick=()=>openPhotoLightbox(0);
             document.getElementById('detail-published').textContent=formatPublished(prop.createdAt);
             const videoWrap=byId('media-video-container');if(videoWrap){const videoUrls=(prop.videoUrls&&prop.videoUrls.length?prop.videoUrls:(prop.videoUrl?[prop.videoUrl]:[]));videoWrap.innerHTML=videoUrls.length?videoUrls.map((url,i)=>`<div class=\"bg-black rounded-xl overflow-hidden shadow-lg border mb-3\"><video controls preload=\"metadata\" class=\"w-full max-h-[520px] object-contain bg-black\" src=\"${url}\"></video><p class=\"text-xs text-slate-300 bg-slate-900 px-3 py-2\">ভিডিও ${i+1}</p></div>`).join(''):'<div class=\"bg-black rounded-xl overflow-hidden shadow-lg border\"><p class=\"text-center text-xs text-slate-400 py-8\">এই বিজ্ঞাপনে ভিডিও সংযুক্ত করা হয়নি।</p></div>'; }
             document.getElementById('detail-description').textContent=prop.description || 'বিস্তারিত তথ্য দেওয়া হয়নি।';
@@ -1414,7 +1416,7 @@
         }
         async function deleteOwnerProperty(id){if(!confirm('এই বিজ্ঞাপনটি স্থায়ীভাবে মুছে ফেলতে চান?'))return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {error}=await toletSupabase.from('properties').delete().eq('id',id).eq('owner_id',user.id);if(error){alert('Delete করা যায়নি: '+error.message+'। properties টেবিলে নিজের বিজ্ঞাপন Delete করার RLS policy প্রয়োজন হতে পারে।');return;}alert('বিজ্ঞাপন মুছে ফেলা হয়েছে।');await loadOwnerProperties();}
         async function loadOwnerProperties(){if(!toletSupabase)return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {data,error}=await toletSupabase.from('properties').select('id,title,status,price,description,created_at,category,address,rent_gender,available_from').eq('owner_id',user.id).order('created_at',{ascending:false});if(error){console.warn(error);const box=byId('account-properties-list');if(box)box.innerHTML='<p class="text-sm text-red-600">বিজ্ঞাপন লোড করা যায়নি: '+escapeAccountText(error.message)+'</p>';return;}window.toletOwnerProperties=data||[];if(typeof renderAccountDashboard==='function'&&window.toletOwnerSession)renderAccountDashboard();renderOwnerProperties();}
-        async function loadApprovedDatabaseProperties(){if(!toletSupabase)return;const {data,error}=await toletSupabase.from('properties').select('*,property_media(media_type,storage_path,sort_order)').eq('status','approved').eq('availability_status','available').order('created_at',{ascending:false});if(error){console.warn('Public properties not loaded',error.message);return;}const remote=(data||[]).map(p=>{const media=(p.property_media||[]).sort((a,b)=>a.sort_order-b.sort_order);const images=media.filter(m=>m.media_type==='image').map(m=>toletSupabase.storage.from(m.media_type==='image'?'property-images':'property-videos').getPublicUrl(m.storage_path).data.publicUrl);const videos=media.filter(m=>m.media_type==='video').map(m=>toletSupabase.storage.from(m.media_type==='image'?'property-images':'property-videos').getPublicUrl(m.storage_path).data.publicUrl);return{id:p.id,title:p.title,category:p.category,price:Number(p.price),location:p.address,bedrooms:p.bedrooms,bathrooms:p.bathrooms,image:images[0]||'',images,videoUrls:videos,ownerName:p.owner_display_name,ownerPhone:p.owner_contact_phone,lat:p.latitude,lng:p.longitude,status:p.status,verified:false,description:p.description,rentGender:p.rent_gender,createdAt:p.created_at,adStatus:p.availability_status,source:'supabase'};});window.toletRemoteProperties=remote;properties=remote.concat(properties.filter(x=>!x.source));if(typeof renderHomeProperties==='function')renderHomeProperties();}
+        async function loadApprovedDatabaseProperties(){if(!toletSupabase)return;const {data,error}=await toletSupabase.from('properties').select('*,property_media(media_type,storage_path,sort_order)').eq('status','approved').eq('availability_status','available').order('created_at',{ascending:false});if(error){console.warn('Public properties not loaded',error.message);return;}const remote=(data||[]).map(p=>{const media=(Array.isArray(p.property_media)?p.property_media:[]).slice().sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));const images=media.filter(m=>m.media_type==='image'&&m.storage_path).map(m=>toletSupabase.storage.from('property-images').getPublicUrl(m.storage_path).data.publicUrl).filter(Boolean);const videos=media.filter(m=>m.media_type==='video'&&m.storage_path).map(m=>toletSupabase.storage.from('property-videos').getPublicUrl(m.storage_path).data.publicUrl).filter(Boolean);return{id:p.id,title:p.title,category:p.category,price:Number(p.price),location:p.address,bedrooms:p.bedrooms,bathrooms:p.bathrooms,image:images[0]||'',images,videoUrls:videos,ownerName:p.owner_display_name,ownerPhone:p.owner_contact_phone,lat:p.latitude,lng:p.longitude,status:p.status,verified:false,description:p.description,rentGender:p.rent_gender,createdAt:p.created_at,adStatus:p.availability_status,source:'supabase'};});window.toletRemoteProperties=remote;properties=remote.concat(properties.filter(x=>!x.source));if(typeof renderHomeProperties==='function')renderHomeProperties();}
 
         // Admin panel: role is rechecked from the profiles table and privileged operations use an Edge Function.
         let toletAdminProfile = null;
