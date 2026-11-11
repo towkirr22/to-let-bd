@@ -628,9 +628,55 @@
 
 
     <div id="owner-auth-modal" class="hidden fixed inset-0 z-[110] bg-slate-950/70 items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5"><div class="flex items-center justify-between mb-3"><h3 class="text-lg font-extrabold">আমার অ্যাকাউন্ট</h3><button type="button" onclick="closeOwnerAuth()" class="text-slate-500 text-2xl">&times;</button></div><div class="flex gap-2 mb-4"><button type="button" onclick="setAuthMode('login')" id="auth-login-tab" class="flex-1 rounded-lg bg-emerald-700 text-white py-2 font-bold">লগইন</button><button type="button" onclick="setAuthMode('register')" id="auth-register-tab" class="flex-1 rounded-lg bg-slate-100 text-slate-700 py-2 font-bold">রেজিস্ট্রেশন</button></div><form id="owner-auth-form" onsubmit="demoOwnerAuth(event)" class="space-y-3"><div id="auth-register-fields" class="hidden"><label class="block text-sm font-semibold">পূর্ণ নাম<input id="auth-name" type="text" placeholder="আপনার নাম" class="mt-1 w-full border rounded-lg p-2.5"></label></div><label class="block text-sm font-semibold">ইমেইল<input id="auth-email" type="email" required autocomplete="email" placeholder="name@example.com" class="mt-1 w-full border rounded-lg p-2.5"></label><label class="block text-sm font-semibold">পাসওয়ার্ড<input id="auth-password" type="password" required minlength="8" autocomplete="current-password" placeholder="কমপক্ষে ৮ অক্ষর" class="mt-1 w-full border rounded-lg p-2.5"></label><div id="auth-confirm-wrap" class="hidden"><label class="block text-sm font-semibold">পাসওয়ার্ড নিশ্চিত করুন<input id="auth-confirm-password" type="password" minlength="8" autocomplete="new-password" placeholder="আবার পাসওয়ার্ড লিখুন" class="mt-1 w-full border rounded-lg p-2.5"></label></div><button type="submit" class="w-full rounded-lg bg-emerald-700 text-white py-3 font-bold" id="auth-submit-label">লগইন করুন</button></form><div class="relative my-4"><div class="border-t"></div><span class="absolute left-1/2 -translate-x-1/2 -top-3 bg-white px-3 text-xs text-slate-500">অথবা</span></div><button type="button" onclick="demoGoogleSignIn()" class="w-full border border-slate-300 rounded-lg py-3 font-bold text-slate-700 flex items-center justify-center gap-3"><i class="fa-brands fa-google text-red-500"></i> Sign in with Google</button><p class="mt-3 text-[11px] text-slate-500">Email অথবা Google—দুইভাবেই একই অ্যাকাউন্ট ড্যাশবোর্ড ব্যবহার করতে পারবেন।</p></div></div>
-<div id="account-dashboard" class="hidden fixed inset-0 z-[111] bg-slate-950/70 items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-extrabold">আমার অ্যাকাউন্ট</h3><button type="button" onclick="closeAccountDashboard()" class="text-slate-500 text-2xl">&times;</button></div><div class="flex items-center gap-3 rounded-xl bg-emerald-50 p-3 mb-4"><div class="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xl"><i class="fa-solid fa-user"></i></div><div class="min-w-0"><div id="account-user-name" class="font-bold truncate">ব্যবহারকারী</div><div id="account-user-email" class="text-sm text-slate-600 truncate"></div><span class="inline-flex mt-1 text-xs font-bold text-emerald-700">● Logged in</span></div></div><button type="button" onclick="closeAccountDashboard();loadOwnerProperties();switchTab('post-ad')" class="w-full border rounded-lg py-2.5 mb-2 font-semibold">বিজ্ঞাপন পোস্ট করুন</button><div class="text-sm text-slate-600 mb-4">তোমার বিজ্ঞাপন: <b id="account-ad-count">লোড হচ্ছে…</b></div><button type="button" onclick="ownerLogout()" class="w-full rounded-lg bg-red-600 text-white py-3 font-bold">Logout</button></div></div>
+<div id="account-dashboard" class="hidden fixed inset-0 z-[111] bg-slate-950/70 items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-extrabold">আমার অ্যাকাউন্ট</h3><button type="button" onclick="closeAccountDashboard()" class="text-slate-500 text-2xl">&times;</button></div><div class="flex items-center gap-3 rounded-xl bg-emerald-50 p-3 mb-4"><div class="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xl"><i class="fa-solid fa-user"></i></div><div class="min-w-0"><div id="account-user-name" class="font-bold truncate">ব্যবহারকারী</div><div id="account-user-email" class="text-sm text-slate-600 truncate"></div><span class="inline-flex mt-1 text-xs font-bold text-emerald-700">● Logged in</span></div></div><button type="button" onclick="closeAccountDashboard();loadOwnerProperties();switchTab('post-ad')" class="w-full border rounded-lg py-2.5 mb-2 font-semibold">বিজ্ঞাপন পোস্ট করুন</button><div class="text-sm text-slate-600 mb-4">তোমার বিজ্ঞাপন: <b id="account-ad-count">লোড হচ্ছে…</b></div><button type="button" id="account-admin-entry" onclick="openAdminPanel()" class="hidden w-full rounded-lg bg-slate-900 text-white py-3 font-bold mb-2"><i class="fa-solid fa-shield-halved mr-2"></i>Admin Dashboard</button><button type="button" onclick="ownerLogout()" class="w-full rounded-lg bg-red-600 text-white py-3 font-bold">Logout</button></div></div>
 
     <div id="removal-request-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/70 items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5"><div class="flex items-center justify-between mb-3"><h3 class="text-lg font-extrabold text-slate-900">বিজ্ঞাপন সরানোর অনুরোধ</h3><button type="button" onclick="closeRemovalRequest()" class="text-slate-500 text-2xl">&times;</button></div><p class="text-sm text-slate-600 mb-4">অনুরোধটি যাচাই করা হবে। অনুরোধ পাঠালেই বিজ্ঞাপন মুছে যাবে না।</p><form id="removal-request-form" onsubmit="submitRemovalRequest(event)" class="space-y-3"><label class="block text-sm font-semibold">আপনার নাম<input id="requester-name" required class="mt-1 w-full border rounded-lg p-2.5" maxlength="80"></label><label class="block text-sm font-semibold">মোবাইল নম্বর<input id="requester-phone" required type="tel" class="mt-1 w-full border rounded-lg p-2.5" maxlength="20" placeholder="01XXXXXXXXX"></label><label class="block text-sm font-semibold">কারণ<select id="request-reason" required class="mt-1 w-full border rounded-lg p-2.5"><option value="">কারণ নির্বাচন করুন</option><option>বাসাটি ভাড়া হয়ে গেছে</option><option>ভুল বা বিভ্রান্তিকর তথ্য</option><option>বিজ্ঞাপনটি মেয়াদোত্তীর্ণ</option><option>অন্যান্য</option></select></label><label class="block text-sm font-semibold">বিস্তারিত (ঐচ্ছিক)<textarea id="request-details" rows="3" class="mt-1 w-full border rounded-lg p-2.5" maxlength="500"></textarea></label><div class="flex gap-2 justify-end"><button type="button" onclick="closeRemovalRequest()" class="px-4 py-2 rounded-lg bg-slate-100">বাতিল</button><button type="submit" class="px-4 py-2 rounded-lg bg-emerald-700 text-white font-bold">অনুরোধ পাঠান</button></div></form></div></div><div id="photo-lightbox" class="hidden fixed inset-0 z-[80] bg-black/95 items-center justify-center p-3" onclick="closePhotoLightbox()"><button class="absolute top-4 right-5 text-white text-3xl">×</button><button class="absolute left-3 sm:left-8 text-white text-4xl" onclick="event.stopPropagation();stepLightbox(-1)">‹</button><img id="lightbox-image" src="" alt="বাসার ছবি" class="max-w-full max-h-[88vh] object-contain rounded-lg" onclick="event.stopPropagation()"><button class="absolute right-3 sm:right-8 text-white text-4xl" onclick="event.stopPropagation();stepLightbox(1)">›</button><div id="lightbox-counter" class="absolute bottom-4 text-white text-sm"></div></div>
+
+    <!-- Admin dashboard: visibility is granted only after server-side role verification -->
+    <section id="tab-admin" class="tab-page hidden py-8">
+      <div class="container mx-auto px-4 max-w-6xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div><span class="text-xs font-bold text-emerald-700">TO-LET BD / ADMIN</span><h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Admin Dashboard</h1><p class="text-sm text-slate-500">NID যাচাই, বিজ্ঞাপন ও ব্যবহারকারী পরিচালনা</p></div>
+          <button onclick="switchTab('home')" class="px-4 py-2 rounded-xl border bg-white font-bold text-sm">সাইটে ফিরে যান</button>
+        </div>
+        <div id="admin-status" class="rounded-xl bg-slate-100 p-4 text-sm text-slate-700 mb-4">Admin permission যাচাই হচ্ছে…</div>
+        <div id="admin-content" class="hidden space-y-5">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="admin-stats">
+            <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">Pending NID</div><b id="admin-stat-nid" class="text-2xl">—</b></div>
+            <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">Pending বিজ্ঞাপন</div><b id="admin-stat-ads" class="text-2xl">—</b></div>
+            <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">মোট ব্যবহারকারী প্রোফাইল</div><b id="admin-stat-users" class="text-2xl">—</b></div>
+            <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">মোট বিজ্ঞাপন</div><b id="admin-stat-properties" class="text-2xl">—</b></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button class="admin-tab-btn px-4 py-2 rounded-lg bg-emerald-700 text-white font-bold" onclick="showAdminSection('nid')">NID আবেদন</button>
+            <button class="admin-tab-btn px-4 py-2 rounded-lg bg-white border font-bold" onclick="showAdminSection('ads')">বিজ্ঞাপন</button>
+            <button class="admin-tab-btn px-4 py-2 rounded-lg bg-white border font-bold" onclick="showAdminSection('users')">ব্যবহারকারী</button>
+            <button class="admin-tab-btn px-4 py-2 rounded-lg bg-white border font-bold" onclick="showAdminSection('settings')">ওয়েবসাইট সেটিংস</button>
+          </div>
+          <div id="admin-section-nid" class="bg-white border rounded-2xl p-4 sm:p-6">
+            <div class="flex justify-between items-center gap-3 mb-4"><h2 class="text-xl font-extrabold">NID Verification আবেদন</h2><button onclick="loadAdminData()" class="text-sm text-emerald-700 font-bold">রিফ্রেশ</button></div>
+            <div id="admin-nid-list" class="space-y-3">লোড হচ্ছে…</div>
+            <div id="admin-nid-detail" class="hidden mt-5 border-t pt-5"></div>
+          </div>
+          <div id="admin-section-ads" class="hidden bg-white border rounded-2xl p-4 sm:p-6"><h2 class="text-xl font-extrabold mb-4">বিজ্ঞাপন Moderation</h2><div id="admin-ads-list" class="space-y-3">লোড হচ্ছে…</div></div>
+          <div id="admin-section-users" class="hidden bg-white border rounded-2xl p-4 sm:p-6"><h2 class="text-xl font-extrabold mb-4">ব্যবহারকারী প্রোফাইল</h2><div id="admin-users-list" class="space-y-2">লোড হচ্ছে…</div></div>
+          <div id="admin-section-settings" class="hidden bg-white border rounded-2xl p-4 sm:p-6">
+            <h2 class="text-xl font-extrabold mb-4">ওয়েবসাইট সেটিংস</h2>
+            <form id="admin-settings-form" class="grid sm:grid-cols-2 gap-3" onsubmit="saveAdminSettings(event)">
+              <label class="text-sm font-semibold">About<textarea id="set-about" rows="3" class="mt-1 w-full border rounded-lg p-2"></textarea></label>
+              <label class="text-sm font-semibold">Support Email<input id="set-email" type="email" class="mt-1 w-full border rounded-lg p-2"></label>
+              <label class="text-sm font-semibold">Phone<input id="set-phone" class="mt-1 w-full border rounded-lg p-2"></label>
+              <label class="text-sm font-semibold">Address<input id="set-address" class="mt-1 w-full border rounded-lg p-2"></label>
+              <label class="text-sm font-semibold">Support Hours<input id="set-hours" class="mt-1 w-full border rounded-lg p-2"></label>
+              <label class="text-sm font-semibold">Facebook URL<input id="set-facebook" type="url" class="mt-1 w-full border rounded-lg p-2"></label>
+              <label class="text-sm font-semibold sm:col-span-2">Copyright<input id="set-copyright" class="mt-1 w-full border rounded-lg p-2"></label>
+              <button class="sm:col-span-2 bg-emerald-700 text-white rounded-xl py-3 font-bold">সেটিংস সংরক্ষণ করুন</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Editable Contact Footer -->
     <footer class="bg-slate-950 text-slate-300 py-10 border-t border-slate-800">
       <div class="container mx-auto px-4 max-w-6xl grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -1233,8 +1279,8 @@
             const div=byId('postDivision').selectedOptions[0]?.textContent||'',dist=byId('postDistrict').selectedOptions[0]?.textContent||'',upa=byId('postUpazila').selectedOptions[0]?.textContent||'',area=byId('postArea').selectedIndex>0?byId('postArea').selectedOptions[0].textContent:'';
             const coords=(id)=>{const n=Number(byId(id)?.textContent);return Number.isFinite(n)?n:null;};
             const lat=coords('picked-lat'),lng=coords('picked-lng');
-            const fullName=byId('post-owner-name').value.trim()||user.user_metadata?.full_name||'বাড়ির মালিক';
-            const phone=byId('post-owner-phone').value.trim()||user.phone||'';
+            const fullName=byId('post-owner-name')?.value.trim()||user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split('@')[0]||'বাড়ির মালিক';
+            const phone=byId('post-owner-phone')?.value.trim()||user.phone||'';
             const payload={owner_id:user.id,title:byId('post-title').value.trim(),category:byId('post-category').value,price:Number(byId('post-price').value),description:byId('post-description').value.trim(),division:div,district:dist,upazila:upa,area,address:[area,upa,dist,div,byId('post-location').value.trim()].filter(Boolean).join(', '),bedrooms:Number(byId('post-beds').value||0),bathrooms:Number(byId('post-baths').value||0),rent_gender:byId('post-rent-gender').value,available_from:byId('post-available-from').value||null,latitude:lat,longitude:lng,owner_display_name:fullName,owner_contact_phone:phone,status:'pending'};
             const submit=e.submitter||document.querySelector('#post-ad-form button[type="submit"]');if(submit){submit.disabled=true;submit.dataset.oldText=submit.textContent;submit.textContent='বিজ্ঞাপন সংরক্ষণ হচ্ছে…';}
             try{
@@ -1256,7 +1302,124 @@
         async function loadOwnerProperties(){if(!toletSupabase)return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {data,error}=await toletSupabase.from('properties').select('id,title,status,price,created_at').eq('owner_id',user.id).order('created_at',{ascending:false});if(error){console.warn(error);return;}window.toletOwnerProperties=data||[];if(typeof renderAccountDashboard==='function'&&window.toletOwnerSession)renderAccountDashboard();}
         async function loadApprovedDatabaseProperties(){if(!toletSupabase)return;const {data,error}=await toletSupabase.from('properties').select('*,property_media(media_type,storage_path,sort_order)').eq('status','approved').eq('availability_status','available').order('created_at',{ascending:false});if(error){console.warn('Public properties not loaded',error.message);return;}const remote=(data||[]).map(p=>{const media=(p.property_media||[]).sort((a,b)=>a.sort_order-b.sort_order);const images=media.filter(m=>m.media_type==='image').map(m=>toletSupabase.storage.from(m.media_type==='image'?'property-images':'property-videos').getPublicUrl(m.storage_path).data.publicUrl);const videos=media.filter(m=>m.media_type==='video').map(m=>toletSupabase.storage.from(m.media_type==='image'?'property-images':'property-videos').getPublicUrl(m.storage_path).data.publicUrl);return{id:p.id,title:p.title,category:p.category,price:Number(p.price),location:p.address,bedrooms:p.bedrooms,bathrooms:p.bathrooms,image:images[0]||'',images,videoUrls:videos,ownerName:p.owner_display_name,ownerPhone:p.owner_contact_phone,lat:p.latitude,lng:p.longitude,status:p.status,verified:false,description:p.description,rentGender:p.rent_gender,createdAt:p.created_at,adStatus:p.availability_status,source:'supabase'};});window.toletRemoteProperties=remote;properties=remote.concat(properties.filter(x=>!x.source));if(typeof renderHomeProperties==='function')renderHomeProperties();}
 
-        // Public page: admin dashboard and admin login are intentionally excluded.
+
+        // Admin panel: role is rechecked from the profiles table and privileged operations use an Edge Function.
+        let toletAdminProfile = null;
+        let adminVerificationCache = [];
+        let adminPropertyCache = [];
+        const adminEscape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        async function openAdminPanel(){
+          if(!window.toletSupabase){alert('Supabase সংযোগ পাওয়া যায়নি।');return;}
+          const status=byId('admin-status'); status.textContent='Admin permission যাচাই হচ্ছে…';
+          switchTab('admin');
+          try{
+            const {data:{user},error:userErr}=await toletSupabase.auth.getUser();
+            if(userErr||!user){status.textContent='Admin access পেতে আগে লগইন করুন।';openOwnerAuth();return;}
+            const {data:profile,error}=await toletSupabase.from('profiles').select('role,verification_status').eq('id',user.id).single();
+            if(error)throw error;
+            if(profile?.role!=='admin'){status.textContent='এই অ্যাকাউন্টে Admin permission নেই।';return;}
+            toletAdminProfile={...profile,user};
+            status.textContent='Admin হিসেবে লগইন করেছেন।';
+            byId('admin-content').classList.remove('hidden');
+            byId('account-admin-entry')?.classList.remove('hidden');
+            await loadAdminData();
+          }catch(err){status.textContent='Admin যাচাই ব্যর্থ: '+(err.message||'Database/RLS configuration পরীক্ষা করুন।');}
+        }
+        function showAdminSection(name){
+          ['nid','ads','users','settings'].forEach(x=>byId('admin-section-'+x).classList.toggle('hidden',x!==name));
+          document.querySelectorAll('.admin-tab-btn').forEach((b,i)=>{const active=['nid','ads','users','settings'][i]===name;b.className='admin-tab-btn px-4 py-2 rounded-lg font-bold '+(active?'bg-emerald-700 text-white':'bg-white border');});
+        }
+        async function callAdminFunction(body){
+          const {data,error}=await toletSupabase.functions.invoke('admin-review-owner-verification',{body});
+          if(error)throw error;if(data?.error)throw new Error(data.error);return data;
+        }
+        async function loadAdminData(){
+          if(!toletAdminProfile)return;
+          const [verifications,properties,profiles]=await Promise.allSettled([
+            callAdminFunction({action:'list_verifications'}),
+            callAdminFunction({action:'list_properties'}),
+            callAdminFunction({action:'list_profiles'})
+          ]);
+          if(verifications.status==='fulfilled'){
+            adminVerificationCache=verifications.value.items||[];
+            byId('admin-stat-nid').textContent=adminVerificationCache.filter(x=>x.status==='pending').length;
+            renderAdminNidList();
+          }else{byId('admin-nid-list').textContent='NID তালিকা লোড হয়নি: '+verifications.reason.message;}
+          if(properties.status==='fulfilled'){
+            adminPropertyCache=properties.value.items||[];
+            byId('admin-stat-ads').textContent=adminPropertyCache.filter(x=>x.status==='pending').length;
+            byId('admin-stat-properties').textContent=adminPropertyCache.length;
+            renderAdminAds();
+          }else{byId('admin-ads-list').textContent='বিজ্ঞাপন লোড হয়নি: '+properties.reason.message;}
+          if(profiles.status==='fulfilled'){
+            const users=profiles.value.items||[];byId('admin-stat-users').textContent=users.length;
+            byId('admin-users-list').innerHTML=users.map(u=>`<div class="border rounded-xl p-3 flex flex-wrap justify-between gap-2"><div><b>${adminEscape(u.full_name||u.email||u.id)}</b><div class="text-xs text-slate-500">${adminEscape(u.email||'')} · ${adminEscape(u.verification_status||'unverified')}</div></div><span class="text-xs font-bold">${adminEscape(u.role||'user')}</span></div>`).join('')||'কোনো প্রোফাইল নেই।';
+          }else{byId('admin-users-list').textContent='ব্যবহারকারী লোড হয়নি: '+profiles.reason.message;}
+          loadAdminSettings();
+        }
+        function renderAdminNidList(){
+          const list=byId('admin-nid-list');
+          if(!adminVerificationCache.length){list.textContent='কোনো NID আবেদন পাওয়া যায়নি।';return;}
+          list.innerHTML=adminVerificationCache.map(v=>`<div class="border rounded-xl p-3 flex flex-wrap items-center justify-between gap-3"><div><b>${adminEscape(v.nid_name||'নাম নেই')}</b><div class="text-xs text-slate-500">Status: ${adminEscape(v.status)} · ${adminEscape(v.created_at||'')}</div></div><button class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold" onclick="viewAdminNid('${adminEscape(v.id)}')">বিস্তারিত দেখুন</button></div>`).join('');
+        }
+        async function viewAdminNid(id){
+          const box=byId('admin-nid-detail');box.classList.remove('hidden');box.textContent='নিরাপদে তথ্য লোড হচ্ছে…';
+          try{
+            const d=await callAdminFunction({action:'view_verification',verification_id:id});
+            const v=d.item||{};
+            box.innerHTML=`<h3 class="text-lg font-extrabold mb-3">আবেদনের বিস্তারিত</h3>
+              <div class="grid sm:grid-cols-2 gap-2 text-sm mb-3"><div><b>নাম:</b> ${adminEscape(v.nid_name)}</div><div><b>জন্মতারিখ:</b> ${adminEscape(v.date_of_birth)}</div><div><b>ফোন:</b> ${adminEscape(v.phone||'')}</div><div><b>NID:</b> <span class="font-mono select-all">${adminEscape(v.nid_number||'Decryption unavailable')}</span></div><div><b>Status:</b> ${adminEscape(v.status)}</div></div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${[['Selfie',v.selfie_url],['NID Front',v.nid_front_url],['NID Back',v.nid_back_url]].map(([label,url])=>`<div><div class="font-bold text-xs mb-1">${label}</div>${url?`<a href="${adminEscape(url)}" target="_blank" rel="noopener"><img src="${adminEscape(url)}" class="w-full h-40 object-contain border rounded-lg bg-slate-50"></a>`:'ছবি পাওয়া যায়নি'}</div>`).join('')}</div>
+              <label class="block text-sm font-bold mt-4">Admin Note<textarea id="admin-nid-note" rows="2" class="w-full border rounded-lg p-2 mt-1">${adminEscape(v.admin_note||'')}</textarea></label>
+              <div class="flex gap-2 mt-3"><button onclick="reviewAdminNid('${adminEscape(id)}','verified')" class="px-4 py-2 rounded-lg bg-emerald-700 text-white font-bold">Approve</button><button onclick="reviewAdminNid('${adminEscape(id)}','rejected')" class="px-4 py-2 rounded-lg bg-red-600 text-white font-bold">Reject</button></div>`;
+          }catch(err){box.textContent='NID detail পাওয়া যায়নি: '+err.message;}
+        }
+        async function reviewAdminNid(id,status){
+          const note=byId('admin-nid-note')?.value||'';
+          if(!confirm(status==='verified'?'এই NID আবেদন Approve করবেন?':'এই NID আবেদন Reject করবেন?'))return;
+          try{await callAdminFunction({action:'review_verification',verification_id:id,status,admin_note:note});alert('NID review সংরক্ষিত হয়েছে।');byId('admin-nid-detail').classList.add('hidden');await loadAdminData();}
+          catch(err){alert('Review ব্যর্থ: '+err.message);}
+        }
+        function renderAdminAds(){
+          byId('admin-ads-list').innerHTML=adminPropertyCache.map(p=>`<div class="border rounded-xl p-3"><div class="flex flex-wrap justify-between gap-2"><div><b>${adminEscape(p.title)}</b><div class="text-xs text-slate-500">${adminEscape(p.address||'')} · ৳${Number(p.price||0).toLocaleString('bn-BD')}</div><div class="text-xs mt-1">Status: ${adminEscape(p.status)} · Owner: ${adminEscape(p.owner_id)}</div></div><div class="flex gap-2 flex-wrap"><button onclick="moderateAdminAd('${adminEscape(p.id)}','approved')" class="px-3 py-2 bg-emerald-700 text-white rounded-lg text-xs font-bold">Approve</button><button onclick="moderateAdminAd('${adminEscape(p.id)}','rejected')" class="px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-bold">Reject</button><button onclick="moderateAdminAd('${adminEscape(p.id)}','suspended')" class="px-3 py-2 bg-slate-700 text-white rounded-lg text-xs font-bold">Suspend</button></div></div></div>`).join('')||'কোনো বিজ্ঞাপন নেই।';
+        }
+        async function moderateAdminAd(id,status){
+          const p=adminPropertyCache.find(x=>String(x.id)===String(id));if(!p)return;
+          if(status==='approved'){
+            const {data:owner,error}=await toletSupabase.from('profiles').select('verification_status').eq('id',p.owner_id).single();
+            if(error||owner?.verification_status!=='verified'){alert('এই মালিকের NID Verification verified নয়। বিজ্ঞাপন Approve করা যাবে না।');return;}
+          }
+          if(!confirm('বিজ্ঞাপনের status '+status+' করবেন?'))return;
+          const {error}=await toletSupabase.from('properties').update({status}).eq('id',id);
+          if(error){alert('আপডেট ব্যর্থ: '+error.message);return;}await loadAdminData();
+        }
+        async function loadAdminSettings(){
+          const {data,error}=await toletSupabase.from('site_settings').select('key,value');
+          if(error){console.warn(error);return;}const cfg=Object.fromEntries((data||[]).map(x=>[x.key,x.value]));
+          const map={about:'set-about',email:'set-email',phone:'set-phone',address:'set-address',hours:'set-hours',facebook:'set-facebook',copyright:'set-copyright'};
+          Object.entries(map).forEach(([k,id])=>{if(byId(id))byId(id).value=cfg[k]||'';});
+        }
+        async function saveAdminSettings(e){
+          e.preventDefault();if(!toletAdminProfile)return;
+          const values={about:'set-about',email:'set-email',phone:'set-phone',address:'set-address',hours:'set-hours',facebook:'set-facebook',copyright:'set-copyright'};
+          const rows=Object.entries(values).map(([key,id])=>({key,value:byId(id).value.trim()}));
+          const {error}=await toletSupabase.from('site_settings').upsert(rows,{onConflict:'key'});
+          if(error){alert('সেটিংস সংরক্ষণ হয়নি: '+error.message);return;}
+          await applyContactSettings();alert('সেটিংস সংরক্ষিত হয়েছে।');
+        }
+        // Account modal reveals the admin shortcut only after an authenticated role check.
+        const _renderAccountDashboard=renderAccountDashboard;
+        renderAccountDashboard=function(){
+          _renderAccountDashboard();
+          const b=byId('account-admin-entry');if(!b)return;
+          b.classList.add('hidden');
+          const user=window.toletOwnerSession?.user;if(!user||!window.toletSupabase)return;
+          toletSupabase.from('profiles').select('role').eq('id',user.id).single().then(({data,error})=>{
+            if(!error&&data?.role==='admin'){toletAdminProfile={role:'admin',user};b.classList.remove('hidden');}
+          });
+        };
+
+        // Admin UI is intentionally gated by profiles.role === 'admin'.
 
     </script>
 </body>
