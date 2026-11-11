@@ -417,6 +417,13 @@
                                 <label class="block text-xs font-bold text-slate-700">বাসা কবে থেকে পাওয়া যাবে?<input type="date" id="post-available-from" class="mt-1 w-full p-2.5 border rounded-lg text-sm"></label>
                             </div>
                             <div><label class="block text-xs font-bold text-slate-700 mb-1">বাসার বিস্তারিত বিবরণ *</label><textarea id="post-description" required rows="5" maxlength="2500" placeholder="বাসার ঠিকানা, আয়তন, সুবিধা, গ্যাস-পানি-বিদ্যুৎ, অগ্রিম/সার্ভিস চার্জ, নিয়মাবলি ইত্যাদি বিস্তারিত লিখুন..." class="w-full p-3 border border-slate-300 rounded-lg text-sm"></textarea></div>
+                            <div class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+                              <div><h4 class="font-bold text-slate-900 text-sm">বাসার সুবিধাসমূহ যোগ করুন</h4><p class="text-xs text-slate-500 mt-1">Built-in সুবিধা বেছে নিন, নিজের সুবিধা লিখে Add করুন। যেকোনো সুবিধা পরে Edit বা Remove করতে পারবেন।</p></div>
+                              <div id="post-amenity-presets" class="flex flex-wrap gap-2"></div>
+                              <div class="flex gap-2"><input id="post-custom-amenity" maxlength="60" class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white p-2.5 text-sm" placeholder="নিজের সুবিধার নাম লিখুন"><button type="button" onclick="addCustomAmenity('post')" class="rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white">Add</button></div>
+                              <div id="post-amenity-selected" class="flex flex-wrap gap-2 min-h-7"></div>
+                              <label class="block text-xs font-bold text-slate-700">সুবিধাসমূহের অতিরিক্ত বিবরণ (ঐচ্ছিক)<textarea id="post-amenity-description" rows="2" maxlength="800" class="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm" placeholder="যেমন: ২৪ ঘণ্টা পানি, আলাদা গ্যাস মিটার ইত্যাদি"></textarea></label>
+                            </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -543,18 +550,8 @@
                                 <i class="fa-solid fa-list-check text-emerald-600"></i> বাসার সুবিধাসমূহ ও বিবরণ
                             </h3>
                             
-                            <p class="text-slate-600 text-sm leading-relaxed">
-                                এই বাসাটিতে রয়েছে চমৎকার প্রাকৃতিক আলো-বাতাসের সুযোগ। সম্পূর্ণ নতুনভাবে টাইলস করা এবং সিকিউরিটির জন্য ২৪ ঘণ্টা সিসিটিভি ক্যামেরার ব্যবস্থা রয়েছে। আলাদা গ্যাস ও পানির সাব-মিটার সুবিধা বিদ্যমান।
-                            </p>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 text-xs font-semibold text-slate-700">
-                                <div class="bg-slate-50 p-2.5 rounded-lg flex items-center gap-2 border"><i class="fa-solid fa-wifi text-emerald-600 text-sm"></i> হাই-স্পিড ওয়াইফাই</div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg flex items-center gap-2 border"><i class="fa-solid fa-elevator text-emerald-600 text-sm"></i> আধুনিক লিফট</div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg flex items-center gap-2 border"><i class="fa-solid fa-shield-halved text-emerald-600 text-sm"></i> সিসিটিভি সিকিউরিটি</div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg flex items-center gap-2 border"><i class="fa-solid fa-bolt text-emerald-600 text-sm"></i> জেনারেটর ব্যাকআপ</div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg flex items-center gap-2 border"><i class="fa-solid fa-square-parking text-emerald-600 text-sm"></i> বাইক/কার পার্কিং</div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg flex items-center gap-2 border"><i class="fa-solid fa-droplet text-emerald-600 text-sm"></i> ২৪ ঘণ্টা ডিপ পানি</div>
-                            </div>
+                            <p id="detail-amenity-description" class="text-slate-600 text-sm leading-relaxed whitespace-pre-line"></p>
+                            <div id="detail-amenities-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 text-xs font-semibold text-slate-700"></div>
                         </div>
 
                         <!-- Interactive Leaflet Map for Property Location -->
@@ -639,6 +636,13 @@
                 </div>
                 <label class="block text-sm font-bold">ঠিকানা *<input id="owner-edit-address" required maxlength="500" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></label>
                 <label class="block text-sm font-bold">বিস্তারিত বিবরণ *<textarea id="owner-edit-description" required rows="7" maxlength="2500" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></textarea></label>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+                  <h3 class="font-bold text-sm">সুবিধাসমূহ Edit করুন</h3>
+                  <div id="edit-amenity-presets" class="flex flex-wrap gap-2"></div>
+                  <div class="flex gap-2"><input id="edit-custom-amenity" maxlength="60" class="min-w-0 flex-1 rounded-lg border bg-white p-2.5 text-sm" placeholder="নতুন সুবিধা লিখুন"><button type="button" onclick="addCustomAmenity('edit')" class="rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white">Add</button></div>
+                  <div id="edit-amenity-selected" class="flex flex-wrap gap-2 min-h-7"></div>
+                  <label class="block text-xs font-bold">সুবিধাসমূহের অতিরিক্ত বিবরণ<textarea id="owner-edit-amenity-description" rows="2" maxlength="800" class="mt-1 w-full rounded-lg border bg-white p-2.5 text-sm"></textarea></label>
+                </div>
                 <label class="block text-sm font-bold">কারা ভাড়া নিতে পারবেন?<select id="owner-edit-rent-gender" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3"><option value="both">নারী ও পুরুষ উভয়েই</option><option value="male">শুধু পুরুষ</option><option value="female">শুধু নারী</option><option value="family">শুধু পরিবার</option></select></label>
                 <label class="block text-sm font-bold">বাসা কবে থেকে পাওয়া যাবে?<input id="owner-edit-available-from" type="date" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></label>
                 <div class="flex flex-col sm:flex-row gap-3 pt-3"><button id="owner-edit-save" type="submit" class="flex-1 rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white"><i class="fa-solid fa-floppy-disk mr-2"></i> পরিবর্তন সংরক্ষণ করুন</button><button type="button" onclick="deleteOwnerPropertyFromEditPage()" class="rounded-xl border border-red-200 bg-red-50 px-5 py-3 font-bold text-red-700"><i class="fa-solid fa-trash mr-2"></i> বিজ্ঞাপন Delete করুন</button></div>
@@ -1168,6 +1172,7 @@
             document.getElementById('detail-published').textContent=formatPublished(prop.createdAt);
             const videoWrap=byId('media-video-container');if(videoWrap){const videoUrls=(prop.videoUrls&&prop.videoUrls.length?prop.videoUrls:(prop.videoUrl?[prop.videoUrl]:[]));videoWrap.innerHTML=videoUrls.length?videoUrls.map((url,i)=>`<div class=\"bg-black rounded-xl overflow-hidden shadow-lg border mb-3\"><video controls preload=\"metadata\" class=\"w-full max-h-[520px] object-contain bg-black\" src=\"${url}\"></video><p class=\"text-xs text-slate-300 bg-slate-900 px-3 py-2\">ভিডিও ${i+1}</p></div>`).join(''):'<div class=\"bg-black rounded-xl overflow-hidden shadow-lg border\"><p class=\"text-center text-xs text-slate-400 py-8\">এই বিজ্ঞাপনে ভিডিও সংযুক্ত করা হয়নি।</p></div>'; }
             document.getElementById('detail-description').textContent=prop.description || 'বিস্তারিত তথ্য দেওয়া হয়নি।';
+            renderPropertyAmenities(prop);
             const genderLabels={both:'নারী ও পুরুষ উভয়েই ভাড়া নিতে পারবেন',male:'শুধু পুরুষ ভাড়াটিয়া',female:'শুধু নারী ভাড়াটিয়া',family:'শুধু পরিবার'};
             document.getElementById('detail-rent-gender').textContent=genderLabels[prop.rentGender||'both'];
             document.getElementById('rented-notice').classList.toggle('hidden',prop.adStatus!=='rented');
@@ -1329,6 +1334,24 @@
             }finally{btn.disabled=false;btn.textContent=old;}
         }
 
+        const BUILTIN_AMENITIES=['হাই-স্পিড ওয়াইফাই','আধুনিক লিফট','সিসিটিভি সিকিউরিটি','জেনারেটর ব্যাকআপ','বাইক/কার পার্কিং','২৪ ঘণ্টা পানি','গ্যাস সংযোগ','আলাদা গ্যাস মিটার','আলাদা পানির মিটার','বিদ্যুৎ ব্যাকআপ','বারান্দা','ছাদ ব্যবহারের সুবিধা','লিফট','ফায়ার সেফটি','নিরাপত্তাকর্মী','টাইলস করা ফ্লোর','আলো-বাতাসপূর্ণ','ড্রয়িং রুম','ডাইনিং রুম','অ্যাটাচড বাথরুম','মডুলার কিচেন','CCTV','Wi-Fi'];
+        const amenityState={post:[],edit:[]};
+        function renderAmenityEditor(mode){
+          const preset=byId(mode+'-amenity-presets'),selected=byId(mode+'-amenity-selected');if(!preset||!selected)return;
+          preset.innerHTML=BUILTIN_AMENITIES.map(a=>`<button type="button" onclick="toggleBuiltinAmenity('${mode}',${JSON.stringify(a).replace(/</g,'\\u003c')})" class="rounded-full border px-3 py-1.5 text-xs font-semibold ${amenityState[mode].includes(a)?'bg-emerald-700 text-white border-emerald-700':'bg-white text-slate-700'}">${escapeAccountText(a)} ${amenityState[mode].includes(a)?'✓':'+'}</button>`).join('');
+          selected.innerHTML=amenityState[mode].map((a,i)=>`<span class="inline-flex items-center gap-2 rounded-full bg-white border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800">${escapeAccountText(a)}<button type="button" aria-label="Remove ${escapeAccountText(a)}" onclick="removeAmenity('${mode}',${i})" class="text-red-600 font-black">×</button></span>`).join('')||'<span class="text-xs text-slate-400">এখনো কোনো সুবিধা যোগ করা হয়নি।</span>';
+        }
+        function toggleBuiltinAmenity(mode,name){const a=amenityState[mode];amenityState[mode]=a.includes(name)?a.filter(x=>x!==name):[...a,name];renderAmenityEditor(mode);}
+        function addCustomAmenity(mode){const input=byId(mode+'-custom-amenity'),name=(input?.value||'').trim();if(!name)return;if(!amenityState[mode].some(x=>x.toLocaleLowerCase()===name.toLocaleLowerCase()))amenityState[mode].push(name);if(input)input.value='';renderAmenityEditor(mode);}
+        function removeAmenity(mode,index){amenityState[mode].splice(index,1);renderAmenityEditor(mode);}
+        function setAmenityEditor(mode,items){amenityState[mode]=Array.isArray(items)?[...new Set(items.map(x=>String(x).trim()).filter(Boolean))]:[];renderAmenityEditor(mode);}
+        function renderPropertyAmenities(prop){
+          const desc=byId('detail-amenity-description'),list=byId('detail-amenities-list');if(!desc||!list)return;
+          const items=Array.isArray(prop.amenities)?prop.amenities:[];desc.textContent=prop.amenityDescription||'';
+          list.innerHTML=items.length?items.map(a=>`<div class="bg-slate-50 p-2.5 rounded-lg flex items-center gap-2 border"><i class="fa-solid fa-check text-emerald-600 text-sm"></i><span>${escapeAccountText(a)}</span></div>`).join(''):'<p class="col-span-full text-sm text-slate-400">বাড়ির মালিক এখনো কোনো সুবিধা যোগ করেননি।</p>';
+        }
+        document.addEventListener('DOMContentLoaded',()=>{setAmenityEditor('post',[]);setAmenityEditor('edit',[]);});
+
         async function handlePostAdSubmit(e) {
             e.preventDefault();
             if(!window.toletSupabase){alert('Backend সংযোগ পাওয়া যায়নি।');return;}
@@ -1344,7 +1367,7 @@
             const lat=coords('picked-lat'),lng=coords('picked-lng');
             const fullName=byId('post-owner-name')?.value?.trim()||user.user_metadata?.full_name||'বাড়ির মালিক';
             const phone=byId('post-owner-phone')?.value?.trim()||user.phone||'';
-            const payload={owner_id:user.id,title:byId('post-title').value.trim(),category:byId('post-category').value,price:Number(byId('post-price').value),description:byId('post-description').value.trim(),division:div,district:dist,upazila:upa,area,address:[area,upa,dist,div,byId('post-location').value.trim()].filter(Boolean).join(', '),bedrooms:Number(byId('post-beds').value||0),bathrooms:Number(byId('post-baths').value||0),rent_gender:byId('post-rent-gender').value,available_from:byId('post-available-from').value||null,latitude:lat,longitude:lng,owner_display_name:fullName,owner_contact_phone:phone,status:'pending'};
+            const payload={owner_id:user.id,title:byId('post-title').value.trim(),category:byId('post-category').value,price:Number(byId('post-price').value),description:byId('post-description').value.trim(),amenities:amenityState.post,amenity_description:byId('post-amenity-description').value.trim(),division:div,district:dist,upazila:upa,area,address:[area,upa,dist,div,byId('post-location').value.trim()].filter(Boolean).join(', '),bedrooms:Number(byId('post-beds').value||0),bathrooms:Number(byId('post-baths').value||0),rent_gender:byId('post-rent-gender').value,available_from:byId('post-available-from').value||null,latitude:lat,longitude:lng,owner_display_name:fullName,owner_contact_phone:phone,status:'pending'};
             const submit=e.submitter||document.querySelector('#post-ad-form button[type="submit"]');if(submit){submit.disabled=true;submit.dataset.oldText=submit.textContent;submit.textContent='বিজ্ঞাপন সংরক্ষণ হচ্ছে…';}
             try{
               const {data:property,error}=await toletSupabase.from('properties').insert(payload).select().single();if(error)throw error;
@@ -1376,6 +1399,8 @@
           byId('owner-edit-price').value=item.price||'';
           byId('owner-edit-address').value=item.address||'';
           byId('owner-edit-description').value=item.description||'';
+          setAmenityEditor('edit',item.amenities||[]);
+          byId('owner-edit-amenity-description').value=item.amenity_description||'';
           byId('owner-edit-rent-gender').value=item.rent_gender||'both';
           byId('owner-edit-available-from').value=item.available_from||'';
           byId('owner-edit-feedback').textContent='';
@@ -1415,8 +1440,8 @@
           await loadOwnerProperties();backToOwnerAccount();
         }
         async function deleteOwnerProperty(id){if(!confirm('এই বিজ্ঞাপনটি স্থায়ীভাবে মুছে ফেলতে চান?'))return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {error}=await toletSupabase.from('properties').delete().eq('id',id).eq('owner_id',user.id);if(error){alert('Delete করা যায়নি: '+error.message+'। properties টেবিলে নিজের বিজ্ঞাপন Delete করার RLS policy প্রয়োজন হতে পারে।');return;}alert('বিজ্ঞাপন মুছে ফেলা হয়েছে।');await loadOwnerProperties();}
-        async function loadOwnerProperties(){if(!toletSupabase)return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {data,error}=await toletSupabase.from('properties').select('id,title,status,price,description,created_at,category,address,rent_gender,available_from').eq('owner_id',user.id).order('created_at',{ascending:false});if(error){console.warn(error);const box=byId('account-properties-list');if(box)box.innerHTML='<p class="text-sm text-red-600">বিজ্ঞাপন লোড করা যায়নি: '+escapeAccountText(error.message)+'</p>';return;}window.toletOwnerProperties=data||[];if(typeof renderAccountDashboard==='function'&&window.toletOwnerSession)renderAccountDashboard();renderOwnerProperties();}
-        async function loadApprovedDatabaseProperties(){if(!toletSupabase)return;const {data,error}=await toletSupabase.from('properties').select('*,property_media(media_type,storage_path,sort_order)').eq('status','approved').eq('availability_status','available').order('created_at',{ascending:false});if(error){console.warn('Public properties not loaded',error.message);return;}const remote=(data||[]).map(p=>{const media=(Array.isArray(p.property_media)?p.property_media:[]).slice().sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));const images=media.filter(m=>m.media_type==='image'&&m.storage_path).map(m=>toletSupabase.storage.from('property-images').getPublicUrl(m.storage_path).data.publicUrl).filter(Boolean);const videos=media.filter(m=>m.media_type==='video'&&m.storage_path).map(m=>toletSupabase.storage.from('property-videos').getPublicUrl(m.storage_path).data.publicUrl).filter(Boolean);return{id:p.id,title:p.title,category:p.category,price:Number(p.price),location:p.address,bedrooms:p.bedrooms,bathrooms:p.bathrooms,image:images[0]||'',images,videoUrls:videos,ownerName:p.owner_display_name,ownerPhone:p.owner_contact_phone,lat:p.latitude,lng:p.longitude,status:p.status,verified:false,description:p.description,rentGender:p.rent_gender,createdAt:p.created_at,adStatus:p.availability_status,source:'supabase'};});window.toletRemoteProperties=remote;properties=remote.concat(properties.filter(x=>!x.source));if(typeof renderHomeProperties==='function')renderHomeProperties();}
+        async function loadOwnerProperties(){if(!toletSupabase)return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {data,error}=await toletSupabase.from('properties').select('id,title,status,price,description,amenities,amenity_description,created_at,category,address,rent_gender,available_from').eq('owner_id',user.id).order('created_at',{ascending:false});if(error){console.warn(error);const box=byId('account-properties-list');if(box)box.innerHTML='<p class="text-sm text-red-600">বিজ্ঞাপন লোড করা যায়নি: '+escapeAccountText(error.message)+'</p>';return;}window.toletOwnerProperties=data||[];if(typeof renderAccountDashboard==='function'&&window.toletOwnerSession)renderAccountDashboard();renderOwnerProperties();}
+        async function loadApprovedDatabaseProperties(){if(!toletSupabase)return;const {data,error}=await toletSupabase.from('properties').select('*,property_media(media_type,storage_path,sort_order)').eq('status','approved').eq('availability_status','available').order('created_at',{ascending:false});if(error){console.warn('Public properties not loaded',error.message);return;}const remote=(data||[]).map(p=>{const media=(Array.isArray(p.property_media)?p.property_media:[]).slice().sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));const images=media.filter(m=>m.media_type==='image'&&m.storage_path).map(m=>toletSupabase.storage.from('property-images').getPublicUrl(m.storage_path).data.publicUrl).filter(Boolean);const videos=media.filter(m=>m.media_type==='video'&&m.storage_path).map(m=>toletSupabase.storage.from('property-videos').getPublicUrl(m.storage_path).data.publicUrl).filter(Boolean);return{id:p.id,title:p.title,category:p.category,price:Number(p.price),location:p.address,bedrooms:p.bedrooms,bathrooms:p.bathrooms,image:images[0]||'',images,videoUrls:videos,ownerName:p.owner_display_name,ownerPhone:p.owner_contact_phone,lat:p.latitude,lng:p.longitude,status:p.status,verified:false,description:p.description,amenities:Array.isArray(p.amenities)?p.amenities:[],amenityDescription:p.amenity_description||'',rentGender:p.rent_gender,createdAt:p.created_at,adStatus:p.availability_status,source:'supabase'};});window.toletRemoteProperties=remote;properties=remote.concat(properties.filter(x=>!x.source));if(typeof renderHomeProperties==='function')renderHomeProperties();}
 
         // Admin panel: role is rechecked from the profiles table and privileged operations use an Edge Function.
         let toletAdminProfile = null;
