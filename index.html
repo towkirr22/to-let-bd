@@ -901,8 +901,9 @@
             // Robust SPA navigation: explicitly hide every page, then reveal the requested page.
             const pages = document.querySelectorAll('.tab-page');
             pages.forEach(page => {
+                // Clear stale inline display overrides (navigateHome previously used !important).
+                page.style.removeProperty('display');
                 page.classList.add('hidden');
-                page.style.display = 'none';
                 page.setAttribute('aria-hidden', 'true');
             });
             const target = document.getElementById(`tab-${tabId}`);
@@ -910,8 +911,8 @@
                 console.warn('Page not found:', tabId);
                 return false;
             }
+            target.style.removeProperty('display');
             target.classList.remove('hidden');
-            target.style.display = '';
             target.setAttribute('aria-hidden', 'false');
 
             // Keep navigation state and browser position in sync.
