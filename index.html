@@ -442,7 +442,9 @@
                             <label class="block text-xs font-bold text-slate-700">
                                 <i class="fa-solid fa-map-location-dot text-red-500"></i> ২. ম্যাপে বাসার সুনির্দিষ্ট অবস্থান পিন করুন *
                             </label>
-                            <p class="text-xs text-slate-500">নিচের মানচিত্রে ক্লিক করে বাসাটির সুনির্দিষ্ট জায়গা নির্দেশ করুন (Lat/Lng অটোমেটিক সেট হবে):</p>
+                            <p class="text-xs text-slate-500">GPS দিয়ে নিজের বর্তমান অবস্থান ম্যাপে আনুন, অথবা ম্যাপে ক্লিক করে বাসার সঠিক অবস্থান পিন করুন।</p>
+                            <button type="button" id="post-use-gps" onclick="usePostAdGpsLocation()" class="inline-flex items-center gap-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 text-sm font-extrabold shadow-sm"><i class="fa-solid fa-location-crosshairs"></i> GPS দিয়ে আমার অবস্থান নিন</button>
+                            <p id="post-gps-status" class="text-xs text-slate-500" aria-live="polite">GPS ব্যবহার করতে ব্রাউজারে Location permission Allow করুন।</p>
                             <div id="post-map-picker" class="h-64 w-full rounded-xl border border-slate-300"></div>
                             <div class="flex gap-4 text-xs font-mono text-slate-500 bg-slate-100 p-2 rounded-lg">
                                 <span>Lat: <strong id="picked-lat" class="text-slate-800">24.0864</strong></span>
@@ -685,7 +687,7 @@
             <div id="admin-nid-list" class="space-y-3">লোড হচ্ছে…</div>
             <div id="admin-nid-detail" class="hidden mt-5 border-t pt-5"></div>
           </div>
-          <div id="admin-section-ads" class="hidden bg-white border rounded-2xl p-4 sm:p-6"><h2 class="text-xl font-extrabold mb-4">বিজ্ঞাপন Moderation</h2><div id="admin-ads-list" class="space-y-3">লোড হচ্ছে…</div></div>
+          <div id="admin-section-ads" class="hidden bg-white border rounded-2xl p-4 sm:p-6"><div class="flex flex-wrap items-center justify-between gap-3 mb-4"><h2 class="text-xl font-extrabold">বিজ্ঞাপন Moderation</h2><button onclick="loadAdminData()" class="text-sm text-emerald-700 font-bold"><i class="fa-solid fa-rotate mr-1"></i>রিফ্রেশ</button></div><p class="text-sm text-slate-500 mb-3">বিজ্ঞাপনগুলো তাদের বর্তমান Status অনুযায়ী আলাদা ক্যাটাগরিতে দেখুন। প্রতিটি বিজ্ঞাপনে Status Tag দেওয়া আছে।</p><div id="admin-ad-filters" class="flex flex-wrap gap-2 mb-4"></div><div id="admin-ads-list" class="space-y-3">লোড হচ্ছে…</div></div>
           <div id="admin-section-users" class="hidden bg-white border rounded-2xl p-4 sm:p-6"><h2 class="text-xl font-extrabold mb-4">ব্যবহারকারী প্রোফাইল</h2><div id="admin-users-list" class="space-y-2">লোড হচ্ছে…</div></div>
           <div id="admin-section-settings" class="hidden bg-white border rounded-2xl p-4 sm:p-6">
             <h2 class="text-xl font-extrabold mb-4">ওয়েবসাইট সেটিংস</h2>
@@ -1241,6 +1243,28 @@
             });
         }
 
+        // Use the browser's GPS to place the owner's current location on the ad map.
+        function usePostAdGpsLocation(){
+            const status=byId('post-gps-status'),button=byId('post-use-gps');
+            if(!navigator.geolocation){if(status)status.textContent='এই ব্রাউজারে GPS/Geolocation সমর্থিত নয়।';return;}
+            if(!postMapInstance){if(status)status.textContent='ম্যাপ প্রস্তুত হচ্ছে। একটু পরে আবার চেষ্টা করুন।';return;}
+            if(button){button.disabled=true;button.classList.add('opacity-60');}
+            if(status)status.textContent='আপনার GPS অবস্থান খোঁজা হচ্ছে…';
+            navigator.geolocation.getCurrentPosition(position=>{
+                const lat=position.coords.latitude,lng=position.coords.longitude;
+                byId('picked-lat').textContent=lat.toFixed(6);byId('picked-lng').textContent=lng.toFixed(6);
+                const point=[lat,lng];
+                if(postMarkerInstance)postMarkerInstance.setLatLng(point);else postMarkerInstance=L.marker(point).addTo(postMapInstance);
+                postMapInstance.setView(point,16);postMapInstance.invalidateSize();
+                if(status)status.textContent='GPS অবস্থান ম্যাপে পিন করা হয়েছে। বাসার অবস্থান আলাদা হলে ম্যাপে সঠিক জায়গায় ক্লিক করে পিন সরিয়ে দিন।';
+                if(button){button.disabled=false;button.classList.remove('opacity-60');}
+            },error=>{
+                const messages={1:'Location permission দেওয়া হয়নি। Browser address bar থেকে Location Allow করে আবার চেষ্টা করুন।',2:'GPS অবস্থান পাওয়া যায়নি। ডিভাইসের Location চালু করে আবার চেষ্টা করুন।',3:'GPS পেতে সময় বেশি লাগছে। আবার চেষ্টা করুন।'};
+                if(status)status.textContent=messages[error.code]||'GPS অবস্থান পাওয়া যায়নি।';
+                if(button){button.disabled=false;button.classList.remove('opacity-60');}
+            },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+        }
+
         // Bangladesh administrative location cascade for ad posting.
         let bdPostLocations=[];
         function fillLocationSelect(el,items,placeholder){if(!el)return;el.innerHTML='';const first=document.createElement('option');first.value='';first.textContent=placeholder;el.appendChild(first);(items||[]).forEach((item,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=item.bn_name||item.name||item;el.appendChild(o)});el.disabled=!items||items.length===0;}
@@ -1447,6 +1471,7 @@
         let toletAdminProfile = null;
         let adminVerificationCache = [];
         let adminPropertyCache = [];
+        let adminAdFilter = 'pending';
         const adminEscape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         async function openAdminPanel(){
           if(!window.toletSupabase){alert('Supabase সংযোগ পাওয়া যায়নি।');return;}
@@ -1520,11 +1545,20 @@
           try{await callAdminFunction({action:'review_verification',verification_id:id,status,admin_note:note});alert('NID review সংরক্ষিত হয়েছে।');byId('admin-nid-detail').classList.add('hidden');await loadAdminData();}
           catch(err){alert('Review ব্যর্থ: '+err.message);}
         }
-        function renderAdminAds(){
-          const list=byId('admin-ads-list');
-          if(!adminPropertyCache.length){list.innerHTML='<div class="rounded-xl border border-dashed p-6 text-center text-slate-500">কোনো বিজ্ঞাপন পাওয়া যায়নি।</div>';return;}
-          list.innerHTML=adminPropertyCache.map(p=>`<article class="border rounded-xl p-3 sm:p-4 bg-white"><div class="flex flex-wrap justify-between gap-3"><div class="min-w-0 flex-1"><div class="font-extrabold text-slate-900">${adminEscape(p.title||'শিরোনাম নেই')}</div><div class="text-xs text-slate-500 mt-1">${adminEscape(p.address||'ঠিকানা নেই')} · ৳${Number(p.price||0).toLocaleString('bn-BD')}</div><div class="text-xs mt-1">Status: <b>${adminEscape(p.status||'unknown')}</b> · Owner ID: ${adminEscape(p.owner_id||'')}</div></div><div class="flex flex-wrap gap-2 items-start"><button onclick="viewAdminAd('${adminEscape(p.id)}')" class="px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold"><i class="fa-solid fa-eye mr-1"></i> সম্পূর্ণ বিস্তারিত</button><button onclick="moderateAdminAd('${adminEscape(p.id)}','approved')" class="px-3 py-2 bg-emerald-700 text-white rounded-lg text-xs font-bold">Approve</button><button onclick="moderateAdminAd('${adminEscape(p.id)}','rejected')" class="px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-bold">Reject</button><button onclick="moderateAdminAd('${adminEscape(p.id)}','suspended')" class="px-3 py-2 bg-slate-700 text-white rounded-lg text-xs font-bold">Suspend</button></div></div><div id="admin-ad-detail-${adminEscape(p.id)}" class="hidden mt-4 border-t pt-4"></div></article>`).join('');
+        function adminAdStatusMeta(status){
+          const map={pending:{label:'PENDING · অনুমোদনের অপেক্ষায়',short:'Pending',cls:'bg-amber-100 text-amber-800 border-amber-200'},approved:{label:'APPROVED · অনুমোদিত',short:'Approved',cls:'bg-emerald-100 text-emerald-800 border-emerald-200'},rejected:{label:'REJECTED · বাতিল',short:'Rejected',cls:'bg-red-100 text-red-800 border-red-200'},suspended:{label:'SUSPENDED · স্থগিত',short:'Suspended',cls:'bg-slate-200 text-slate-800 border-slate-300'}};
+          return map[String(status||'').toLowerCase()]||{label:'UNKNOWN · অজানা',short:'Unknown',cls:'bg-gray-100 text-gray-700 border-gray-200'};
         }
+        function renderAdminAds(){
+          const list=byId('admin-ads-list'),filters=byId('admin-ad-filters');
+          const keys=['pending','approved','rejected','suspended','all'];
+          const labels={pending:'Pending',approved:'Approved',rejected:'Rejected',suspended:'Suspended',all:'সব বিজ্ঞাপন'};
+          filters.innerHTML=keys.map(k=>{const count=k==='all'?adminPropertyCache.length:adminPropertyCache.filter(p=>String(p.status||'').toLowerCase()===k).length;const active=adminAdFilter===k;return `<button type="button" onclick="setAdminAdFilter('${k}')" class="px-3 py-2 rounded-xl border text-sm font-extrabold ${active?'bg-slate-900 text-white border-slate-900':'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">${labels[k]} <span class="ml-1 inline-flex min-w-6 justify-center rounded-full px-1.5 py-0.5 text-xs ${active?'bg-white/20':'bg-slate-100 text-slate-700'}">${count}</span></button>`}).join('');
+          const items=adminAdFilter==='all'?adminPropertyCache:adminPropertyCache.filter(p=>String(p.status||'').toLowerCase()===adminAdFilter);
+          if(!items.length){list.innerHTML=`<div class="rounded-xl border border-dashed p-6 text-center text-slate-500">${labels[adminAdFilter]} ক্যাটাগরিতে কোনো বিজ্ঞাপন নেই।</div>`;return;}
+          list.innerHTML=items.map(p=>{const st=adminAdStatusMeta(p.status);return `<article class="border rounded-xl p-3 sm:p-4 bg-white"><div class="flex flex-wrap justify-between gap-3"><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><div class="font-extrabold text-slate-900">${adminEscape(p.title||'শিরোনাম নেই')}</div><span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-extrabold ${st.cls}">${st.label}</span></div><div class="text-xs text-slate-500 mt-1">${adminEscape(p.address||'ঠিকানা নেই')} · ৳${Number(p.price||0).toLocaleString('bn-BD')}</div><div class="text-xs mt-1 text-slate-600">Owner ID: ${adminEscape(p.owner_id||'')}</div></div><div class="flex flex-wrap gap-2 items-start"><button onclick="viewAdminAd('${adminEscape(p.id)}')" class="px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold"><i class="fa-solid fa-eye mr-1"></i> সম্পূর্ণ বিস্তারিত</button>${p.status!=='approved'?`<button onclick="moderateAdminAd('${adminEscape(p.id)}','approved')" class="px-3 py-2 bg-emerald-700 text-white rounded-lg text-xs font-bold">Approve</button>`:''}${p.status!=='pending'?`<button onclick="moderateAdminAd('${adminEscape(p.id)}','pending')" class="px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold">Pending</button>`:''}${p.status!=='rejected'?`<button onclick="moderateAdminAd('${adminEscape(p.id)}','rejected')" class="px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-bold">Reject</button>`:''}${p.status!=='suspended'?`<button onclick="moderateAdminAd('${adminEscape(p.id)}','suspended')" class="px-3 py-2 bg-slate-700 text-white rounded-lg text-xs font-bold">Suspend</button>`:''}</div></div><div id="admin-ad-detail-${adminEscape(p.id)}" class="hidden mt-4 border-t pt-4"></div></article>`}).join('');
+        }
+        function setAdminAdFilter(status){adminAdFilter=status;renderAdminAds();}
         async function adminMediaUrl(bucket,path){
           if(!path)return '';
           try{const {data,error}=await toletSupabase.storage.from(bucket).createSignedUrl(path,3600);if(!error&&data?.signedUrl)return data.signedUrl;}catch(e){}
