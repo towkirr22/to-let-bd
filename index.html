@@ -624,6 +624,30 @@
             </div>
         </section>
 
+        <!-- Full-page owner property editor -->
+        <section id="tab-owner-property-edit" class="tab-page hidden py-8">
+          <div class="container mx-auto px-4 max-w-3xl">
+            <button type="button" onclick="backToOwnerAccount()" class="mb-5 inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-bold text-emerald-800"><i class="fa-solid fa-arrow-left"></i> আমার অ্যাকাউন্টে ফিরে যান</button>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm">
+              <div class="mb-6 border-b pb-5"><span class="text-xs font-extrabold text-emerald-700">OWNER DASHBOARD</span><h1 class="mt-1 text-2xl font-extrabold text-slate-900">বিজ্ঞাপনের বিস্তারিত সম্পাদনা</h1><p class="mt-2 text-sm text-slate-500">পরিবর্তন সংরক্ষণ করলে বিজ্ঞাপনটি পুনরায় Admin Review-এর জন্য Pending হবে।</p></div>
+              <form id="owner-property-edit-form" onsubmit="saveOwnerPropertyEdit(event)" class="space-y-4">
+                <input type="hidden" id="owner-edit-property-id">
+                <label class="block text-sm font-bold">বিজ্ঞাপনের শিরোনাম *<input id="owner-edit-title" required maxlength="160" class="mt-1 w-full rounded-xl border border-slate-300 p-3" placeholder="বিজ্ঞাপনের শিরোনাম"></label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label class="block text-sm font-bold">ক্যাটাগরি<select id="owner-edit-category" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3"><option value="Family">ফ্যামিলি বাসা</option><option value="Bachelor">ব্যাচেলর মেস</option><option value="Sublet">সাবলেট</option><option value="Commercial">দোকান / অফিস</option><option value="Hotel">হোটেল / গেস্ট হাউস</option></select></label>
+                  <label class="block text-sm font-bold">ভাড়া (৳) *<input id="owner-edit-price" required type="number" min="1" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></label>
+                </div>
+                <label class="block text-sm font-bold">ঠিকানা *<input id="owner-edit-address" required maxlength="500" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></label>
+                <label class="block text-sm font-bold">বিস্তারিত বিবরণ *<textarea id="owner-edit-description" required rows="7" maxlength="2500" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></textarea></label>
+                <label class="block text-sm font-bold">কারা ভাড়া নিতে পারবেন?<select id="owner-edit-rent-gender" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3"><option value="both">নারী ও পুরুষ উভয়েই</option><option value="male">শুধু পুরুষ</option><option value="female">শুধু নারী</option><option value="family">শুধু পরিবার</option></select></label>
+                <label class="block text-sm font-bold">বাসা কবে থেকে পাওয়া যাবে?<input id="owner-edit-available-from" type="date" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></label>
+                <div class="flex flex-col sm:flex-row gap-3 pt-3"><button id="owner-edit-save" type="submit" class="flex-1 rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white"><i class="fa-solid fa-floppy-disk mr-2"></i> পরিবর্তন সংরক্ষণ করুন</button><button type="button" onclick="deleteOwnerPropertyFromEditPage()" class="rounded-xl border border-red-200 bg-red-50 px-5 py-3 font-bold text-red-700"><i class="fa-solid fa-trash mr-2"></i> বিজ্ঞাপন Delete করুন</button></div>
+              </form>
+              <p id="owner-edit-feedback" class="mt-4 text-sm" role="status" aria-live="polite"></p>
+            </div>
+          </div>
+        </section>
+
     </div>
 
 
@@ -1292,10 +1316,58 @@
         }
         function escapeAccountText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
         function propertyStatusView(status){const map={pending:['যাচাইয়ের অপেক্ষায়','bg-amber-100 text-amber-800'],approved:['অনুমোদিত','bg-emerald-100 text-emerald-800'],rejected:['অনুমোদিত হয়নি','bg-red-100 text-red-800'],suspended:['স্থগিত','bg-slate-200 text-slate-700']};return map[String(status||'').toLowerCase()]||[status||'অজানা','bg-slate-100 text-slate-700'];}
-        function renderOwnerProperties(){const box=byId('account-properties-list');if(!box)return;const items=window.toletOwnerProperties||[];if(!items.length){box.innerHTML='<div class="rounded-xl border border-dashed p-5 text-center text-sm text-slate-500">আপনি এখনো কোনো বিজ্ঞাপন জমা দেননি।</div>';return;}box.innerHTML=items.map(p=>{const [label,cls]=propertyStatusView(p.status);return `<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-2"><h5 class="font-bold text-sm text-slate-900 min-w-0">${escapeAccountText(p.title)}</h5><span class="shrink-0 rounded-full px-2 py-1 text-[10px] font-extrabold ${cls}">${escapeAccountText(label)}</span></div><div class="text-xs text-slate-500 mt-1">৳ ${Number(p.price||0).toLocaleString('en-BD')} · ${p.created_at?new Date(p.created_at).toLocaleDateString('bn-BD'):''}</div><div class="flex gap-2 mt-3"><button type="button" class="flex-1 rounded-lg border py-2 text-xs font-bold text-emerald-800" onclick="editOwnerProperty('${String(p.id).replace(/[^a-zA-Z0-9-]/g,'')}')"><i class="fa-solid fa-pen mr-1"></i> Edit</button><button type="button" class="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-700" onclick="deleteOwnerProperty('${String(p.id).replace(/[^a-zA-Z0-9-]/g,'')}')"><i class="fa-solid fa-trash mr-1"></i> Delete</button></div></article>`;}).join('');}
-        async function editOwnerProperty(id){const item=(window.toletOwnerProperties||[]).find(p=>String(p.id)===String(id));if(!item)return;const title=prompt('বিজ্ঞাপনের নতুন শিরোনাম লিখুন:',item.title||'');if(title===null)return;if(!title.trim()){alert('শিরোনাম খালি রাখা যাবে না।');return;}const priceText=prompt('নতুন ভাড়া লিখুন (শুধু সংখ্যা):',String(item.price||''));if(priceText===null)return;const price=Number(priceText);if(!Number.isFinite(price)||price<=0){alert('সঠিক ভাড়া লিখুন।');return;}const description=prompt('বিজ্ঞাপনের বিবরণ সম্পাদনা করুন:',item.description||'');if(description===null)return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {error}=await toletSupabase.from('properties').update({title:title.trim(),price,description:description.trim(),status:'pending'}).eq('id',id).eq('owner_id',user.id);if(error){alert('Edit করা যায়নি: '+error.message+'। properties টেবিলে নিজের বিজ্ঞাপন Update করার RLS policy প্রয়োজন হতে পারে।');return;}alert('বিজ্ঞাপন আপডেট হয়েছে। পরিবর্তিত বিজ্ঞাপন পুনরায় Admin Review-এর জন্য Pending করা হয়েছে।');await loadOwnerProperties();}
+        function renderOwnerProperties(){const box=byId('account-properties-list');if(!box)return;const items=window.toletOwnerProperties||[];if(!items.length){box.innerHTML='<div class="rounded-xl border border-dashed p-5 text-center text-sm text-slate-500">আপনি এখনো কোনো বিজ্ঞাপন জমা দেননি।</div>';return;}box.innerHTML=items.map(p=>{const [label,cls]=propertyStatusView(p.status);return `<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-2"><h5 class="font-bold text-sm text-slate-900 min-w-0">${escapeAccountText(p.title)}</h5><span class="shrink-0 rounded-full px-2 py-1 text-[10px] font-extrabold ${cls}">${escapeAccountText(label)}</span></div><div class="text-xs text-slate-500 mt-1">৳ ${Number(p.price||0).toLocaleString('en-BD')} · ${p.created_at?new Date(p.created_at).toLocaleDateString('bn-BD'):''}</div><div class="flex gap-2 mt-3"><button type="button" class="flex-1 rounded-lg border py-2 text-xs font-bold text-emerald-800" onclick="editOwnerProperty('${String(p.id).replace(/[^a-zA-Z0-9-]/g,'')}')"><i class="fa-solid fa-pen mr-1"></i> বিস্তারিত Edit</button><button type="button" class="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-700" onclick="deleteOwnerProperty('${String(p.id).replace(/[^a-zA-Z0-9-]/g,'')}')"><i class="fa-solid fa-trash mr-1"></i> Delete</button></div></article>`;}).join('');}
+        let currentOwnerEditPropertyId = null;
+        function editOwnerProperty(id){
+          const item=(window.toletOwnerProperties||[]).find(p=>String(p.id)===String(id));
+          if(!item){alert('বিজ্ঞাপনটি পাওয়া যায়নি।');return;}
+          currentOwnerEditPropertyId=String(item.id);
+          byId('owner-edit-property-id').value=String(item.id);
+          byId('owner-edit-title').value=item.title||'';
+          byId('owner-edit-category').value=item.category||'Family';
+          byId('owner-edit-price').value=item.price||'';
+          byId('owner-edit-address').value=item.address||'';
+          byId('owner-edit-description').value=item.description||'';
+          byId('owner-edit-rent-gender').value=item.rent_gender||'both';
+          byId('owner-edit-available-from').value=item.available_from||'';
+          byId('owner-edit-feedback').textContent='';
+          closeAccountDashboard();
+          switchTab('owner-property-edit');
+        }
+        function backToOwnerAccount(){switchTab('home');openAccountDashboard();loadOwnerProperties();}
+        async function saveOwnerPropertyEdit(event){
+          event.preventDefault();
+          const id=byId('owner-edit-property-id').value;
+          const title=byId('owner-edit-title').value.trim();
+          const price=Number(byId('owner-edit-price').value);
+          const address=byId('owner-edit-address').value.trim();
+          const description=byId('owner-edit-description').value.trim();
+          const feedback=byId('owner-edit-feedback');
+          if(!title||!address||!description||!Number.isFinite(price)||price<=0){feedback.className='mt-4 text-sm text-red-600';feedback.textContent='সব প্রয়োজনীয় তথ্য সঠিকভাবে পূরণ করুন।';return;}
+          const {data:{user}}=await toletSupabase.auth.getUser();
+          if(!user){feedback.className='mt-4 text-sm text-red-600';feedback.textContent='সেশন শেষ হয়েছে। আবার Login করুন।';return;}
+          const button=byId('owner-edit-save');button.disabled=true;button.textContent='সংরক্ষণ হচ্ছে…';
+          const payload={title,category:byId('owner-edit-category').value,price,address,description,rent_gender:byId('owner-edit-rent-gender').value,available_from:byId('owner-edit-available-from').value||null,status:'pending'};
+          const {error}=await toletSupabase.from('properties').update(payload).eq('id',id).eq('owner_id',user.id);
+          button.disabled=false;button.innerHTML='<i class="fa-solid fa-floppy-disk mr-2"></i> পরিবর্তন সংরক্ষণ করুন';
+          if(error){feedback.className='mt-4 text-sm text-red-600';feedback.textContent='সংরক্ষণ করা যায়নি: '+error.message;return;}
+          feedback.className='mt-4 text-sm font-bold text-emerald-700';feedback.textContent='পরিবর্তন সংরক্ষিত হয়েছে। বিজ্ঞাপনটি Admin Review-এর জন্য Pending হয়েছে।';
+          await loadOwnerProperties();
+          setTimeout(backToOwnerAccount,900);
+        }
+        async function deleteOwnerPropertyFromEditPage(){
+          const id=byId('owner-edit-property-id').value;
+          if(!id)return;
+          const ok=window.confirm('এই বিজ্ঞাপনটি স্থায়ীভাবে Delete করতে চান? এই কাজ আর Undo করা যাবে না।');
+          if(!ok)return;
+          const {data:{user}}=await toletSupabase.auth.getUser();
+          if(!user){alert('আবার Login করুন।');return;}
+          const {error}=await toletSupabase.from('properties').delete().eq('id',id).eq('owner_id',user.id);
+          if(error){byId('owner-edit-feedback').className='mt-4 text-sm text-red-600';byId('owner-edit-feedback').textContent='Delete করা যায়নি: '+error.message;return;}
+          await loadOwnerProperties();backToOwnerAccount();
+        }
         async function deleteOwnerProperty(id){if(!confirm('এই বিজ্ঞাপনটি স্থায়ীভাবে মুছে ফেলতে চান?'))return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {error}=await toletSupabase.from('properties').delete().eq('id',id).eq('owner_id',user.id);if(error){alert('Delete করা যায়নি: '+error.message+'। properties টেবিলে নিজের বিজ্ঞাপন Delete করার RLS policy প্রয়োজন হতে পারে।');return;}alert('বিজ্ঞাপন মুছে ফেলা হয়েছে।');await loadOwnerProperties();}
-        async function loadOwnerProperties(){if(!toletSupabase)return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {data,error}=await toletSupabase.from('properties').select('id,title,status,price,description,created_at').eq('owner_id',user.id).order('created_at',{ascending:false});if(error){console.warn(error);const box=byId('account-properties-list');if(box)box.innerHTML='<p class="text-sm text-red-600">বিজ্ঞাপন লোড করা যায়নি: '+escapeAccountText(error.message)+'</p>';return;}window.toletOwnerProperties=data||[];if(typeof renderAccountDashboard==='function'&&window.toletOwnerSession)renderAccountDashboard();renderOwnerProperties();}
+        async function loadOwnerProperties(){if(!toletSupabase)return;const {data:{user}}=await toletSupabase.auth.getUser();if(!user)return;const {data,error}=await toletSupabase.from('properties').select('id,title,status,price,description,created_at,category,address,rent_gender,available_from').eq('owner_id',user.id).order('created_at',{ascending:false});if(error){console.warn(error);const box=byId('account-properties-list');if(box)box.innerHTML='<p class="text-sm text-red-600">বিজ্ঞাপন লোড করা যায়নি: '+escapeAccountText(error.message)+'</p>';return;}window.toletOwnerProperties=data||[];if(typeof renderAccountDashboard==='function'&&window.toletOwnerSession)renderAccountDashboard();renderOwnerProperties();}
         async function loadApprovedDatabaseProperties(){if(!toletSupabase)return;const {data,error}=await toletSupabase.from('properties').select('*,property_media(media_type,storage_path,sort_order)').eq('status','approved').eq('availability_status','available').order('created_at',{ascending:false});if(error){console.warn('Public properties not loaded',error.message);return;}const remote=(data||[]).map(p=>{const media=(p.property_media||[]).sort((a,b)=>a.sort_order-b.sort_order);const images=media.filter(m=>m.media_type==='image').map(m=>toletSupabase.storage.from(m.media_type==='image'?'property-images':'property-videos').getPublicUrl(m.storage_path).data.publicUrl);const videos=media.filter(m=>m.media_type==='video').map(m=>toletSupabase.storage.from(m.media_type==='image'?'property-images':'property-videos').getPublicUrl(m.storage_path).data.publicUrl);return{id:p.id,title:p.title,category:p.category,price:Number(p.price),location:p.address,bedrooms:p.bedrooms,bathrooms:p.bathrooms,image:images[0]||'',images,videoUrls:videos,ownerName:p.owner_display_name,ownerPhone:p.owner_contact_phone,lat:p.latitude,lng:p.longitude,status:p.status,verified:false,description:p.description,rentGender:p.rent_gender,createdAt:p.created_at,adStatus:p.availability_status,source:'supabase'};});window.toletRemoteProperties=remote;properties=remote.concat(properties.filter(x=>!x.source));if(typeof renderHomeProperties==='function')renderHomeProperties();}
 
         // Public page: admin dashboard and admin login are intentionally excluded.
