@@ -684,6 +684,7 @@
           </div>
           <div id="admin-section-nid" class="bg-white border rounded-2xl p-4 sm:p-6">
             <div class="flex justify-between items-center gap-3 mb-4"><h2 class="text-xl font-extrabold">NID Verification আবেদন</h2><button onclick="loadAdminData()" class="text-sm text-emerald-700 font-bold">রিফ্রেশ</button></div>
+            <div id="admin-nid-filters" class="flex flex-wrap gap-2 mb-4"></div>
             <div id="admin-nid-list" class="space-y-3">লোড হচ্ছে…</div>
             <div id="admin-nid-detail" class="hidden mt-5 border-t pt-5"></div>
           </div>
@@ -1470,12 +1471,17 @@
         // Admin panel: role is rechecked from the profiles table and privileged operations use an Edge Function.
         let toletAdminProfile = null;
         let adminVerificationCache = [];
+        let adminNidFilter = 'pending';
         let adminPropertyCache = [];
         let adminAdFilter = 'pending';
         const adminEscape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         async function openAdminPanel(){
           if(!window.toletSupabase){alert('Supabase সংযোগ পাওয়া যায়নি।');return;}
           const status=byId('admin-status'); status.textContent='Admin permission যাচাই হচ্ছে…';
+          // Close the account modal first; otherwise its fixed overlay remains above Admin Dashboard.
+          if (typeof closeAccountDashboard === 'function') closeAccountDashboard();
+          const accountModal = byId('account-dashboard');
+          if (accountModal) { accountModal.classList.add('hidden'); accountModal.classList.remove('flex'); }
           switchTab('admin');
           try{
             const {data:{user},error:userErr}=await toletSupabase.auth.getUser();
@@ -1523,10 +1529,24 @@
           loadAdminSettings();
         }
         function renderAdminNidList(){
-          const list=byId('admin-nid-list');
-          if(!adminVerificationCache.length){list.textContent='কোনো NID আবেদন পাওয়া যায়নি।';return;}
-          list.innerHTML=adminVerificationCache.map(v=>`<div class="border rounded-xl p-3 flex flex-wrap items-center justify-between gap-3"><div><b>${adminEscape(v.nid_name||'নাম নেই')}</b><div class="text-xs text-slate-500">Status: ${adminEscape(v.status)} · ${adminEscape(v.created_at||'')}</div></div><button class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold" onclick="viewAdminNid('${adminEscape(v.id)}')">বিস্তারিত দেখুন</button></div>`).join('');
+          const list=byId('admin-nid-list'),filters=byId('admin-nid-filters');
+          const keys=['pending','verified','rejected','all'];
+          const labels={pending:'Pending · অপেক্ষমাণ',verified:'Approved · অনুমোদিত',rejected:'Rejected · বাতিল',all:'সব আবেদন'};
+          const normalized=v=>String(v||'').toLowerCase();
+          filters.innerHTML=keys.map(k=>{
+            const count=k==='all'?adminVerificationCache.length:adminVerificationCache.filter(v=>normalized(v.status)===k).length;
+            const active=adminNidFilter===k;
+            return `<button type="button" onclick="setAdminNidFilter('${k}')" class="px-3 py-2 rounded-xl border text-sm font-extrabold ${active?'bg-slate-900 text-white border-slate-900':'bg-white text-slate-700 border-slate-200'}">${labels[k]} <span class="ml-1 inline-flex min-w-6 justify-center rounded-full px-1.5 py-0.5 text-xs ${active?'bg-white/20':'bg-slate-100 text-slate-700'}">${count}</span></button>`;
+          }).join('');
+          const items=adminNidFilter==='all'?adminVerificationCache:adminVerificationCache.filter(v=>normalized(v.status)===adminNidFilter);
+          if(!items.length){list.innerHTML=`<div class="rounded-xl border border-dashed p-6 text-center text-slate-500">${labels[adminNidFilter]} ক্যাটাগরিতে কোনো আবেদন নেই।</div>`;return;}
+          const meta={pending:{label:'PENDING · অপেক্ষমাণ',cls:'bg-amber-100 text-amber-800 border-amber-200'},verified:{label:'APPROVED · অনুমোদিত',cls:'bg-emerald-100 text-emerald-800 border-emerald-200'},rejected:{label:'REJECTED · বাতিল',cls:'bg-red-100 text-red-800 border-red-200'}};
+          list.innerHTML=items.map(v=>{
+            const st=meta[normalized(v.status)]||{label:String(v.status||'UNKNOWN').toUpperCase(),cls:'bg-slate-100 text-slate-700 border-slate-200'};
+            return `<div class="border rounded-xl p-3 flex flex-wrap items-center justify-between gap-3"><div><div class="flex flex-wrap items-center gap-2"><b>${adminEscape(v.nid_name||'নাম নেই')}</b><span class="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-extrabold ${st.cls}">${st.label}</span></div><div class="text-xs text-slate-500 mt-1">আবেদনের তারিখ: ${adminEscape(v.created_at||'')}</div></div><button class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold" onclick="viewAdminNid('${adminEscape(v.id)}')">বিস্তারিত দেখুন</button></div>`;
+          }).join('');
         }
+        function setAdminNidFilter(status){adminNidFilter=status;renderAdminNidList();}
         async function viewAdminNid(id){
           const box=byId('admin-nid-detail');box.classList.remove('hidden');box.textContent='নিরাপদে তথ্য লোড হচ্ছে…';
           try{
