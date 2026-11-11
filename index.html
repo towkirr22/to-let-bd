@@ -1509,6 +1509,11 @@
         async function openAdminPanel(){
           if(!window.toletSupabase){alert('Supabase সংযোগ পাওয়া যায়নি।');return;}
           const status=byId('admin-status'); status.textContent='Admin permission যাচাই হচ্ছে…';
+          // Dismiss the account modal before navigating. Its fixed high-z-index overlay
+          // otherwise remains on top of the Admin page and looks like the dashboard did not open.
+          const accountModal=byId('account-dashboard');
+          if(accountModal){accountModal.classList.add('hidden');accountModal.classList.remove('flex');}
+          if(typeof closeAccountDashboard==='function') closeAccountDashboard();
           switchTab('admin');
           try{
             const {data:{user},error:userErr}=await toletSupabase.auth.getUser();
