@@ -451,7 +451,8 @@
                             </label>
                             <p class="text-xs text-slate-500">GPS দিয়ে নিজের বর্তমান অবস্থান ম্যাপে আনুন, অথবা ম্যাপে ক্লিক করে বাসার সঠিক অবস্থান পিন করুন।</p>
                             <button type="button" id="post-use-gps" onclick="usePostAdGpsLocation()" class="inline-flex items-center gap-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 text-sm font-extrabold shadow-sm"><i class="fa-solid fa-location-crosshairs"></i> GPS দিয়ে আমার অবস্থান নিন</button>
-                            <p id="post-gps-status" class="text-xs text-slate-500" aria-live="polite">GPS ব্যবহার করতে ব্রাউজারে Location permission Allow করুন।</p>
+                            <p id="post-gps-status" class="text-xs text-slate-500" aria-live="polite">GPS-এর নির্ভুলতা দেখানো হবে। ভুল হলে জায়গার নাম লিখে খুঁজুন অথবা ম্যাপে ক্লিক করে পিন বসান।</p>
+                            <div class="flex gap-2"><input id="post-map-place-query" class="min-w-0 flex-1 rounded-lg border border-slate-300 p-2.5 text-sm" placeholder="এলাকা / উপজেলা / জেলা লিখুন (যেমন: সিরাজগঞ্জ সদর)"><button type="button" onclick="searchPostMapPlace()" class="rounded-lg bg-slate-800 px-4 text-sm font-bold text-white">ম্যাপে খুঁজুন</button></div>
                             <div id="post-map-picker" class="h-64 w-full rounded-xl border border-slate-300"></div>
                             <div class="flex gap-4 text-xs font-mono text-slate-500 bg-slate-100 p-2 rounded-lg">
                                 <span>Lat: <strong id="picked-lat" class="text-slate-800">24.0864</strong></span>
@@ -937,22 +938,27 @@
             const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
             return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
+        function validateBrowserLocation(position){
+            const c=position&&position.coords,lat=Number(c?.latitude),lng=Number(c?.longitude),accuracy=Number(c?.accuracy);
+            if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)throw new Error('অবস্থানটি সঠিকভাবে পাওয়া যায়নি।');
+            return {lat,lng,accuracy:Number.isFinite(accuracy)?accuracy:null};
+        }
+        function getBrowserLocation(onSuccess,onError){
+            if(!navigator.geolocation){onError(new Error('এই ব্রাউজারে Location সুবিধা নেই।'));return;}
+            navigator.geolocation.getCurrentPosition(pos=>{try{onSuccess(validateBrowserLocation(pos));}catch(e){onError(e);}},err=>{
+                const msg={1:'Location permission Blocked। Chrome-এর address bar থেকে Location Allow করুন।',2:'অবস্থান পাওয়া যায়নি। Wi-Fi চালু রেখে আবার চেষ্টা করুন।',3:'অবস্থান পেতে সময় শেষ হয়েছে। আবার চেষ্টা করুন।'};
+                onError(new Error(msg[err.code]||'অবস্থান পাওয়া যায়নি।'));
+            },{enableHighAccuracy:true,timeout:30000,maximumAge:0});
+        }
+        function locationAccuracyText(m){return m==null?'নির্ভুলতা অজানা':m<100?`প্রায় ${Math.round(m)} মিটার`:`প্রায় ${(m/1000).toFixed(1)} কিমি`}
         function searchNearbyProperties() {
-            const status = document.getElementById('nearby-status');
-            if (!navigator.geolocation) { status.textContent = 'আপনার ব্রাউজারে GPS সুবিধা নেই।'; return; }
-            status.textContent = 'আপনার অবস্থান নেওয়া হচ্ছে…';
-            navigator.geolocation.getCurrentPosition(pos => {
-                userGpsPosition = {lat:pos.coords.latitude, lng:pos.coords.longitude};
-                nearbySearchActive = true; homeCity = '';
-                document.querySelectorAll('.home-city-chips button').forEach((b,i)=>b.classList.toggle('active',i===0));
-                resetGeoFilters();
-                status.textContent = 'আপনার কাছাকাছি বিজ্ঞাপন দেখানো হচ্ছে · GPS অবস্থান শুধু এই সার্চে ব্যবহার হবে।';
-                filterHomeCards();
-                byId('nearby-map-panel').classList.remove('hidden'); initNearbyMap();
-            }, err => {
-                const messages = {1:'লোকেশন অনুমতি দেওয়া হয়নি। ব্রাউজারের Location permission চালু করুন।',2:'আপনার অবস্থান পাওয়া যায়নি। GPS চালু করে আবার চেষ্টা করুন।',3:'লোকেশন পেতে সময় শেষ হয়েছে। আবার চেষ্টা করুন।'};
-                status.textContent = messages[err.code] || 'লোকেশন পাওয়া যায়নি।';
-            }, {enableHighAccuracy:true, timeout:15000, maximumAge:60000});
+            const status=byId('nearby-status');status.textContent='আপনার অবস্থান নেওয়া হচ্ছে…';
+            getBrowserLocation(pos=>{
+                userGpsPosition=pos;nearbySearchActive=true;homeCity='';
+                document.querySelectorAll('.home-city-chips button').forEach((b,i)=>b.classList.toggle('active',i===0));resetGeoFilters();
+                status.textContent=pos.accuracy!=null&&pos.accuracy>500?`অবস্থানটি আনুমানিক (${locationAccuracyText(pos.accuracy)})। কাছাকাছি ফলাফল ভুল হতে পারে—ম্যাপে নিজের অবস্থান যাচাই করুন।`:`আপনার অবস্থান পাওয়া গেছে (নির্ভুলতা ${locationAccuracyText(pos.accuracy)})।`;
+                filterHomeCards();byId('nearby-map-panel').classList.remove('hidden');initNearbyMap();
+            },err=>{status.textContent=err.message;});
         }
         function clearNearbySearch() {
             nearbySearchActive = false; userGpsPosition = null;
@@ -962,12 +968,14 @@
         }
 
         // Interactive OpenStreetMap: GPS + listing markers + explicit place search.
-        let nearbyLeafletMap=null, nearbyMapMarkers=[];
+        let nearbyLeafletMap=null, nearbyMapMarkers=[], nearbySearchMarker=null;
         function toggleNearbyMap(){const panel=byId('nearby-map-panel');panel.classList.toggle('hidden');if(!panel.classList.contains('hidden')){initNearbyMap();setTimeout(()=>nearbyLeafletMap&&nearbyLeafletMap.invalidateSize(),180);}}
-        function initNearbyMap(){if(typeof L==='undefined'){byId('nearby-status').textContent='ম্যাপ লাইব্রেরি লোড হয়নি; ইন্টারনেট সংযোগ পরীক্ষা করুন।';return;}if(!nearbyLeafletMap){nearbyLeafletMap=L.map('nearby-map').setView([23.8103,90.4125],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(nearbyLeafletMap);}refreshNearbyMapMarkers();}
-        function refreshNearbyMapMarkers(items){if(!nearbyLeafletMap)return;nearbyMapMarkers.forEach(m=>nearbyLeafletMap.removeLayer(m));nearbyMapMarkers=[];const list=items||properties.filter(p=>p.status==='approved');list.forEach(p=>{const lat=Number(p.lat),lng=Number(p.lng);if(!Number.isFinite(lat)||!Number.isFinite(lng)||p.lat==null||p.lng==null)return;const marker=L.marker([lat,lng]).addTo(nearbyLeafletMap).bindPopup(`<b>${escapeMapText(p.title||'ভাড়ার বিজ্ঞাপন')}</b><br>${escapeMapText(p.location||'')}<br>৳${Number(p.price||0).toLocaleString('bn-BD')}`);nearbyMapMarkers.push(marker);});if(userGpsPosition){const you=L.circleMarker([userGpsPosition.lat,userGpsPosition.lng],{radius:9,color:'#2563eb',fillColor:'#60a5fa',fillOpacity:.9}).addTo(nearbyLeafletMap).bindPopup('আপনার বর্তমান অবস্থান');nearbyMapMarkers.push(you);nearbyLeafletMap.setView([userGpsPosition.lat,userGpsPosition.lng],12);}else if(nearbyMapMarkers.length){const group=L.featureGroup(nearbyMapMarkers);nearbyLeafletMap.fitBounds(group.getBounds().pad(.18));}}
+        function initNearbyMap(){if(typeof L==='undefined'){byId('nearby-status').textContent='ম্যাপ লাইব্রেরি লোড হয়নি; ইন্টারনেট সংযোগ পরীক্ষা করুন।';return;}if(!nearbyLeafletMap){nearbyLeafletMap=L.map('nearby-map').setView([23.685,90.3563],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(nearbyLeafletMap);}refreshNearbyMapMarkers();}
+        function getPropertyCoords(p){const lat=Number(p?.lat??p?.latitude),lng=Number(p?.lng??p?.longitude);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180&&(p?.lat??p?.latitude)!=null&&(p?.lng??p?.longitude)!=null?{lat,lng}:null;}
+        function refreshNearbyMapMarkers(items){if(!nearbyLeafletMap)return;nearbyMapMarkers.forEach(m=>nearbyLeafletMap.removeLayer(m));nearbyMapMarkers=[];if(nearbySearchMarker){nearbyLeafletMap.removeLayer(nearbySearchMarker);nearbySearchMarker=null;}const list=items||properties.filter(p=>p.status==='approved');list.forEach(p=>{const c=getPropertyCoords(p);if(!c)return;const marker=L.marker([c.lat,c.lng]).addTo(nearbyLeafletMap).bindPopup(`<b>${escapeMapText(p.title||'ভাড়ার বিজ্ঞাপন')}</b><br>${escapeMapText(p.location||'')}<br>৳${Number(p.price||0).toLocaleString('bn-BD')}`);nearbyMapMarkers.push(marker);});if(userGpsPosition){const you=L.circleMarker([userGpsPosition.lat,userGpsPosition.lng],{radius:9,color:'#2563eb',fillColor:'#60a5fa',fillOpacity:.9}).addTo(nearbyLeafletMap).bindPopup(`আপনার অবস্থান · নির্ভুলতা ${locationAccuracyText(userGpsPosition.accuracy)}`);nearbyMapMarkers.push(you);nearbyLeafletMap.setView([userGpsPosition.lat,userGpsPosition.lng],13);}else if(nearbyMapMarkers.length){nearbyLeafletMap.fitBounds(L.featureGroup(nearbyMapMarkers).getBounds().pad(.18));}}
         function escapeMapText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-        async function searchMapPlace(e){e.preventDefault();const q=byId('map-place-query').value.trim();if(!q)return;const status=byId('nearby-status');status.textContent='ম্যাপে জায়গাটি খোঁজা হচ্ছে…';try{const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=bd&q='+encodeURIComponent(q);const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('search unavailable');const data=await r.json();if(!data.length){status.textContent='এই নামে জায়গা পাওয়া যায়নি। অন্যভাবে লিখে চেষ্টা করুন।';return;}const place=data[0],lat=Number(place.lat),lng=Number(place.lon);byId('nearby-map-panel').classList.remove('hidden');initNearbyMap();nearbyLeafletMap.setView([lat,lng],14);L.marker([lat,lng]).addTo(nearbyLeafletMap).bindPopup(escapeMapText(place.display_name)).openPopup();status.textContent='ম্যাপে জায়গাটি দেখানো হয়েছে।';}catch(err){status.textContent='জায়গা খোঁজা যায়নি। পরে আবার চেষ্টা করুন।';}}
+        async function geocodeBangladeshPlace(query){const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=bd&q='+encodeURIComponent(query+', Bangladesh');const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('search unavailable');const data=await r.json();if(!data.length)throw new Error('এই নামে জায়গা পাওয়া যায়নি।');return data[0];}
+        async function searchMapPlace(e){e.preventDefault();const q=byId('map-place-query').value.trim();if(!q)return;const status=byId('nearby-status');status.textContent='ম্যাপে জায়গাটি খোঁজা হচ্ছে…';try{const place=await geocodeBangladeshPlace(q),lat=Number(place.lat),lng=Number(place.lon);byId('nearby-map-panel').classList.remove('hidden');initNearbyMap();if(nearbySearchMarker)nearbyLeafletMap.removeLayer(nearbySearchMarker);nearbySearchMarker=L.marker([lat,lng]).addTo(nearbyLeafletMap).bindPopup(escapeMapText(place.display_name)).openPopup();nearbyLeafletMap.setView([lat,lng],15);setTimeout(()=>nearbyLeafletMap.invalidateSize(),100);status.textContent='সার্চ করা জায়গাটি ম্যাপে দেখানো হয়েছে।';}catch(err){status.textContent=err.message||'জায়গা খোঁজা যায়নি। পরে আবার চেষ্টা করুন।';}}
         async function applyContactSettings(){
           let cfg={};
           try{
@@ -1008,7 +1016,7 @@
             items = items.filter(p => p.price >= min && p.price <= max);
             if (nearbySearchActive && userGpsPosition) {
                 const radius = Number(document.getElementById('nearby-radius')?.value || 10);
-                items = items.map(p => ({...p, _distanceKm: (Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat != null && p.lng != null) ? distanceKm(userGpsPosition.lat,userGpsPosition.lng,Number(p.lat),Number(p.lng)) : null}))
+                items = items.map(p => {const c=getPropertyCoords(p);return {...p,_distanceKm:c?distanceKm(userGpsPosition.lat,userGpsPosition.lng,c.lat,c.lng):null};})
                     .filter(p => p._distanceKm !== null && p._distanceKm <= radius)
                     .sort((a,b)=>a._distanceKm-b._distanceKm);
             }
@@ -1164,20 +1172,17 @@
 
             switchTab('property-details');
 
-            // Setup Leaflet Details Map
+            // Property map: accept both normalized and raw Supabase coordinate names.
             setTimeout(() => {
-                if (detailsMapInstance) {
-                    detailsMapInstance.remove();
-                }
-                detailsMapInstance = L.map('details-leaflet-map').setView([prop.lat, prop.lng], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap'
-                }).addTo(detailsMapInstance);
-
-                L.marker([prop.lat, prop.lng]).addTo(detailsMapInstance)
-                    .bindPopup(`<b>${prop.title}</b><br>ভাড়া: ৳ ${prop.price}`)
-                    .openPopup();
-            }, 200);
+                const mapEl=byId('details-leaflet-map');if(!mapEl||typeof L==='undefined')return;
+                if(detailsMapInstance){detailsMapInstance.remove();detailsMapInstance=null;}
+                const coords=getPropertyCoords(prop),center=coords?[coords.lat,coords.lng]:[23.685,90.3563];
+                detailsMapInstance=L.map('details-leaflet-map').setView(center,coords?16:7);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(detailsMapInstance);
+                if(coords)L.marker(center).addTo(detailsMapInstance).bindPopup(`<b>${escapeMapText(prop.title)}</b><br>ভাড়া: ৳ ${Number(prop.price||0).toLocaleString('bn-BD')}`).openPopup();
+                else L.popup().setLatLng(center).setContent('এই বিজ্ঞাপনের জন্য নির্দিষ্ট ম্যাপ লোকেশন দেওয়া হয়নি।').openOn(detailsMapInstance);
+                setTimeout(()=>detailsMapInstance&&detailsMapInstance.invalidateSize(),150);
+            },250);
         }
 
         function switchMediaTab(type) {
@@ -1200,43 +1205,33 @@
         }
 
         <!-- Post Ad Interactive Map Picker -->
-        function initPostMapPicker() {
-            postMapInstance = L.map('post-map-picker').setView([24.0864, 89.2831], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(postMapInstance);
-
-            postMapInstance.on('click', function(e) {
-                const { lat, lng } = e.latlng;
-                document.getElementById('picked-lat').innerText = lat.toFixed(4);
-                document.getElementById('picked-lng').innerText = lng.toFixed(4);
-
-                if (postMarkerInstance) {
-                    postMarkerInstance.setLatLng(e.latlng);
-                } else {
-                    postMarkerInstance = L.marker(e.latlng).addTo(postMapInstance);
-                }
-            });
+        function setPostMapPin(lat,lng,zoom=16){
+            const point=[Number(lat),Number(lng)];if(!postMapInstance||!point.every(Number.isFinite))return;
+            byId('picked-lat').textContent=point[0].toFixed(6);byId('picked-lng').textContent=point[1].toFixed(6);
+            if(postMarkerInstance)postMarkerInstance.setLatLng(point);else postMarkerInstance=L.marker(point).addTo(postMapInstance);
+            postMapInstance.setView(point,zoom);postMapInstance.invalidateSize();
         }
+        function initPostMapPicker() {
+            if(typeof L==='undefined'){const status=byId('post-gps-status');if(status)status.textContent='ম্যাপ লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।';return;}
+            if(postMapInstance)return;
+            postMapInstance=L.map('post-map-picker').setView([23.685,90.3563],7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(postMapInstance);
+            postMapInstance.on('click',e=>setPostMapPin(e.latlng.lat,e.latlng.lng,16));
+            setTimeout(()=>postMapInstance&&postMapInstance.invalidateSize(),200);
+        }
+        async function searchPostMapPlace(){const q=byId('post-map-place-query')?.value.trim();if(!q)return;const status=byId('post-gps-status');if(status)status.textContent='ম্যাপে জায়গাটি খোঁজা হচ্ছে…';try{const place=await geocodeBangladeshPlace(q);setPostMapPin(Number(place.lat),Number(place.lon),16);if(status)status.textContent='সার্চ করা জায়গাটি পিন করা হয়েছে। বাসার সঠিক অবস্থানে ম্যাপে ক্লিক করে পিন ঠিক করুন।';}catch(e){if(status)status.textContent=e.message||'জায়গাটি পাওয়া যায়নি।';}}
 
         // Use the browser's GPS to place the owner's current location on the ad map.
         function usePostAdGpsLocation(){
             const status=byId('post-gps-status'),button=byId('post-use-gps');
-            if(!navigator.geolocation){if(status)status.textContent='এই ব্রাউজারে GPS/Geolocation সমর্থিত নয়।';return;}
             if(!postMapInstance){if(status)status.textContent='ম্যাপ প্রস্তুত হচ্ছে। একটু পরে আবার চেষ্টা করুন।';return;}
             if(button){button.disabled=true;button.classList.add('opacity-60');}
-            if(status)status.textContent='আপনার GPS অবস্থান খোঁজা হচ্ছে…';
-            navigator.geolocation.getCurrentPosition(position=>{
-                const lat=position.coords.latitude,lng=position.coords.longitude;
-                byId('picked-lat').textContent=lat.toFixed(6);byId('picked-lng').textContent=lng.toFixed(6);
-                const point=[lat,lng];
-                if(postMarkerInstance)postMarkerInstance.setLatLng(point);else postMarkerInstance=L.marker(point).addTo(postMapInstance);
-                postMapInstance.setView(point,16);postMapInstance.invalidateSize();
-                if(status)status.textContent='GPS অবস্থান ম্যাপে পিন করা হয়েছে। বাসার অবস্থান আলাদা হলে ম্যাপে সঠিক জায়গায় ক্লিক করে পিন সরিয়ে দিন।';
+            if(status)status.textContent='আপনার ডিভাইসের অবস্থান খোঁজা হচ্ছে…';
+            getBrowserLocation(pos=>{
+                setPostMapPin(pos.lat,pos.lng,16);
+                if(status)status.textContent=`অবস্থান পিন করা হয়েছে (নির্ভুলতা ${locationAccuracyText(pos.accuracy)})। ৫০০ মিটারের বেশি হলে এটি আনুমানিক হতে পারে। বাসার সঠিক জায়গায় ম্যাপে ক্লিক করে পিন ঠিক করুন।`;
                 if(button){button.disabled=false;button.classList.remove('opacity-60');}
-            },error=>{
-                const messages={1:'Location permission দেওয়া হয়নি। Browser address bar থেকে Location Allow করে আবার চেষ্টা করুন।',2:'GPS অবস্থান পাওয়া যায়নি। ডিভাইসের Location চালু করে আবার চেষ্টা করুন।',3:'GPS পেতে সময় বেশি লাগছে। আবার চেষ্টা করুন।'};
-                if(status)status.textContent=messages[error.code]||'GPS অবস্থান পাওয়া যায়নি।';
-                if(button){button.disabled=false;button.classList.remove('opacity-60');}
-            },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+            },err=>{if(status)status.textContent=err.message;if(button){button.disabled=false;button.classList.remove('opacity-60');}});
         }
 
         // Bangladesh administrative location cascade for ad posting.
