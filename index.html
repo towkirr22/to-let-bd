@@ -684,7 +684,7 @@
           </div>
           <div id="admin-section-nid" class="bg-white border rounded-2xl p-4 sm:p-6">
             <div class="flex justify-between items-center gap-3 mb-4"><h2 class="text-xl font-extrabold">NID Verification আবেদন</h2><button onclick="loadAdminData()" class="text-sm text-emerald-700 font-bold">রিফ্রেশ</button></div>
-            <div id="admin-nid-list" class="space-y-3">লোড হচ্ছে…</div>
+            <div id="admin-nid-filters" class="flex flex-wrap gap-2 mb-4"></div><div id="admin-nid-list" class="space-y-3">লোড হচ্ছে…</div>
             <div id="admin-nid-detail" class="hidden mt-5 border-t pt-5"></div>
           </div>
           <div id="admin-section-ads" class="hidden bg-white border rounded-2xl p-4 sm:p-6"><div class="flex flex-wrap items-center justify-between gap-3 mb-4"><h2 class="text-xl font-extrabold">বিজ্ঞাপন Moderation</h2><button onclick="loadAdminData()" class="text-sm text-emerald-700 font-bold"><i class="fa-solid fa-rotate mr-1"></i>রিফ্রেশ</button></div><p class="text-sm text-slate-500 mb-3">বিজ্ঞাপনগুলো তাদের বর্তমান Status অনুযায়ী আলাদা ক্যাটাগরিতে দেখুন। প্রতিটি বিজ্ঞাপনে Status Tag দেওয়া আছে।</p><div id="admin-ad-filters" class="flex flex-wrap gap-2 mb-4"></div><div id="admin-ads-list" class="space-y-3">লোড হচ্ছে…</div><div class="mt-6 border-t pt-5"><h3 class="font-extrabold text-lg mb-3">বিজ্ঞাপন সরানোর অনুরোধ</h3><div id="admin-removal-requests" class="space-y-3">লোড হচ্ছে…</div></div></div>
@@ -1287,13 +1287,30 @@
         async function loadPostLocations(){try{if(!bdLocations.length){const res=await fetch(BD_LOCATION_URL);if(!res.ok)throw new Error('location fetch failed');bdPostLocations=await res.json();}else{bdPostLocations=bdLocations;}fillLocationSelect(byId('postDivision'),bdPostLocations,'বিভাগ নির্বাচন করুন');}catch(e){console.warn(e);fillLocationSelect(byId('postDivision'),[],'লোকেশন তালিকা লোড হয়নি');alert('বাংলাদেশের বিভাগ-জেলা-উপজেলা তালিকা লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।');}}
         function initPostLocationCascade(){const d=byId('postDivision'),z=byId('postDistrict'),u=byId('postUpazila'),a=byId('postArea');if(!d)return;d.addEventListener('change',()=>{const div=bdPostLocations[Number(d.value)];fillLocationSelect(z,div?.districts||[],'জেলা নির্বাচন করুন');fillLocationSelect(u,[],'আগে জেলা নির্বাচন করুন');fillLocationSelect(a,[],'আগে উপজেলা নির্বাচন করুন');});z.addEventListener('change',()=>{const div=bdPostLocations[Number(d.value)],dist=div?.districts?.[Number(z.value)];fillLocationSelect(u,dist?.upazilas||[],'উপজেলা / থানা নির্বাচন করুন');fillLocationSelect(a,[],'আগে উপজেলা নির্বাচন করুন');});u.addEventListener('change',()=>{const div=bdPostLocations[Number(d.value)],dist=div?.districts?.[Number(z.value)],upa=dist?.upazilas?.[Number(u.value)];fillLocationSelect(a,[...(upa?.unions||[]),...(upa?.pourashavas||[])],'এলাকা / ইউনিয়ন / ওয়ার্ড নির্বাচন করুন');});}
         function getPostAddress(){const text=id=>{const el=byId(id);return el&&el.selectedIndex>0?el.options[el.selectedIndex].text:''};return [text('postArea'),text('postUpazila'),text('postDistrict'),text('postDivision'),byId('post-location')?.value.trim()].filter(Boolean).join(', ');}
+        let accumulatedPropertyPhotos=[];
+        function renderAccumulatedPhotos(){
+          const box=byId('post-photo-preview');if(!box)return;box.innerHTML='';
+          accumulatedPropertyPhotos.forEach((file,index)=>{
+            const wrap=document.createElement('div');wrap.className='relative';
+            const img=document.createElement('img');img.src=URL.createObjectURL(file);img.className='h-20 w-full object-cover rounded-lg border';img.alt=file.name;
+            const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.className='absolute -top-2 -right-2 rounded-full bg-red-600 text-white w-6 h-6 font-bold';remove.onclick=()=>{accumulatedPropertyPhotos.splice(index,1);syncPhotoInput();renderAccumulatedPhotos();};
+            wrap.append(img,remove);box.appendChild(wrap);
+          });
+        }
+        function syncPhotoInput(){
+          const input=byId('post-property-photos');if(!input)return;
+          try{const dt=new DataTransfer();accumulatedPropertyPhotos.forEach(f=>dt.items.add(f));input.files=dt.files;}catch(err){console.warn('Could not sync photo file list',err);}
+        }
         function setupMediaPreviews(){
           const photos=byId('post-property-photos'),videos=byId('post-property-video');
-          const photoState=[]; const videoState=[];
-          const renderFiles=(files,target,isVideo=false)=>{if(!target)return;target.innerHTML='';files.forEach((f,i)=>{const item=document.createElement('div');item.className='relative';if(isVideo){item.className='py-1 text-xs';item.textContent=`${i+1}. ${f.name} (${(f.size/1024/1024).toFixed(1)} MB)`;}else{const img=document.createElement('img');img.src=URL.createObjectURL(f);img.className='h-20 w-full object-cover rounded-lg border';img.alt=f.name;item.appendChild(img);const tag=document.createElement('span');tag.className='absolute left-1 top-1 rounded bg-slate-900/80 text-white text-[9px] px-1.5 py-0.5';tag.textContent=i===0?'Main':'ছবি '+(i+1);item.appendChild(tag);}target.appendChild(item);});};
-          photos?.addEventListener('change',()=>{photoState.push(...[...(photos.files||[])]);const dt=new DataTransfer();photoState.forEach(f=>dt.items.add(f));photos.files=dt.files;renderFiles(photoState,byId('post-photo-preview'));});
-          videos?.addEventListener('change',()=>{videoState.push(...[...(videos.files||[])]);const dt=new DataTransfer();videoState.forEach(f=>dt.items.add(f));videos.files=dt.files;renderFiles(videoState,byId('post-video-preview'),true);});
-          byId('post-ad-form')?.addEventListener('reset',()=>{photoState.length=0;videoState.length=0;setTimeout(()=>{renderFiles([],byId('post-photo-preview'));renderFiles([],byId('post-video-preview'),true);},0);});
+          photos?.addEventListener('change',()=>{
+            const incoming=[...(photos.files||[])];
+            incoming.forEach(file=>{if(file.type.startsWith('image/')&&!accumulatedPropertyPhotos.some(x=>x.name===file.name&&x.size===file.size&&x.lastModified===file.lastModified))accumulatedPropertyPhotos.push(file);});
+            syncPhotoInput();renderAccumulatedPhotos();
+          });
+          videos?.addEventListener('change',()=>{
+            const files=[...(videos.files||[])];byId('post-video-preview').innerHTML=files.length?files.map((f,i)=>`<div class="py-1">${i+1}. ${escapeAccountText(f.name)} (${(f.size/1024/1024).toFixed(1)} MB)</div>`).join(''):'কোনো ভিডিও নির্বাচন করা হয়নি।';
+          });
         }
         let ownerAuthMode='login';
         function openOwnerAuth(){if(window.toletOwnerSession){openAccountDashboard();return;}const m=byId('owner-auth-modal');m.classList.remove('hidden');m.classList.add('flex');}
@@ -1385,8 +1402,23 @@
         const amenityState={post:[],edit:[]};
         function renderAmenityEditor(mode){
           const preset=byId(mode+'-amenity-presets'),selected=byId(mode+'-amenity-selected');if(!preset||!selected)return;
-          preset.innerHTML=BUILTIN_AMENITIES.map(a=>`<button type="button" onclick="toggleBuiltinAmenity('${mode}',${JSON.stringify(a).replace(/</g,'\\u003c')})" class="rounded-full border px-3 py-1.5 text-xs font-semibold ${amenityState[mode].includes(a)?'bg-emerald-700 text-white border-emerald-700':'bg-white text-slate-700'}">${escapeAccountText(a)} ${amenityState[mode].includes(a)?'✓':'+'}</button>`).join('');
-          selected.innerHTML=amenityState[mode].map((a,i)=>`<span class="inline-flex items-center gap-2 rounded-full bg-white border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800">${escapeAccountText(a)}<button type="button" aria-label="Remove ${escapeAccountText(a)}" onclick="removeAmenity('${mode}',${i})" class="text-red-600 font-black">×</button></span>`).join('')||'<span class="text-xs text-slate-400">এখনো কোনো সুবিধা যোগ করা হয়নি।</span>';
+          preset.innerHTML='';
+          BUILTIN_AMENITIES.forEach(name=>{
+            const chosen=amenityState[mode].includes(name);
+            const button=document.createElement('button');
+            button.type='button';button.className='rounded-full border px-3 py-1.5 text-xs font-semibold '+(chosen?'bg-emerald-700 text-white border-emerald-700':'bg-white text-slate-700');
+            button.textContent=name+(chosen?' ✓':' +');
+            button.addEventListener('click',()=>toggleBuiltinAmenity(mode,name));
+            preset.appendChild(button);
+          });
+          selected.innerHTML='';
+          if(!amenityState[mode].length){selected.innerHTML='<span class="text-xs text-slate-400">এখনো কোনো সুবিধা যোগ করা হয়নি।</span>';return;}
+          amenityState[mode].forEach((name,index)=>{
+            const chip=document.createElement('span');chip.className='inline-flex items-center gap-2 rounded-full bg-white border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800';
+            const label=document.createElement('span');label.textContent=name;
+            const remove=document.createElement('button');remove.type='button';remove.setAttribute('aria-label','Remove '+name);remove.className='text-red-600 font-black';remove.textContent='×';remove.addEventListener('click',()=>removeAmenity(mode,index));
+            chip.append(label,remove);selected.appendChild(chip);
+          });
         }
         function toggleBuiltinAmenity(mode,name){const a=amenityState[mode];amenityState[mode]=a.includes(name)?a.filter(x=>x!==name):[...a,name];renderAmenityEditor(mode);}
         function addCustomAmenity(mode){const input=byId(mode+'-custom-amenity'),name=(input?.value||'').trim();if(!name)return;if(!amenityState[mode].some(x=>x.toLocaleLowerCase()===name.toLocaleLowerCase()))amenityState[mode].push(name);if(input)input.value='';renderAmenityEditor(mode);}
@@ -1404,7 +1436,7 @@
             if(!window.toletSupabase){alert('Backend সংযোগ পাওয়া যায়নি।');return;}
             const {data:{user}}=await toletSupabase.auth.getUser();
             if(!user){openOwnerAuth();alert('বিজ্ঞাপন পোস্ট করার আগে লগইন করুন।');return;}
-            const selectedPhotos=[...(byId('post-property-photos')?.files||[])], selectedVideos=[...(byId('post-property-video')?.files||[])];
+            const selectedPhotos=[...accumulatedPropertyPhotos], selectedVideos=[...(byId('post-property-video')?.files||[])];
             if(!byId('postDivision').value||!byId('postDistrict').value||!byId('postUpazila').value){alert('বিভাগ, জেলা ও উপজেলা নির্বাচন করুন।');return;}
             if(!selectedPhotos.length){alert('কমপক্ষে একটি বাসার ছবি নির্বাচন করুন।');return;}
             if(selectedPhotos.length>12||selectedVideos.length>3){alert('সর্বোচ্চ ১২টি ছবি ও ৩টি ভিডিও আপলোড করা যাবে।');return;}
@@ -1414,7 +1446,7 @@
             const lat=coords('picked-lat'),lng=coords('picked-lng');
             const fullName=byId('post-owner-name')?.value?.trim()||user.user_metadata?.full_name||'বাড়ির মালিক';
             const phone=byId('post-owner-phone')?.value?.trim()||user.phone||'';
-            const payload={owner_id:user.id,title:byId('post-title').value.trim(),category:byId('post-category').value,price:Number(byId('post-price').value),description:byId('post-description').value.trim(),amenities:[...amenityState.post],amenity_description:byId('post-amenity-description').value.trim(),division:div,district:dist,upazila:upa,area,address:[area,upa,dist,div,byId('post-location').value.trim()].filter(Boolean).join(', '),bedrooms:Number(byId('post-beds').value||0),bathrooms:Number(byId('post-baths').value||0),rent_gender:byId('post-rent-gender').value,available_from:byId('post-available-from').value||null,latitude:lat,longitude:lng,owner_display_name:fullName,owner_contact_phone:phone,status:'pending'};
+            const payload={owner_id:user.id,title:byId('post-title').value.trim(),category:byId('post-category').value,price:Number(byId('post-price').value),description:byId('post-description').value.trim(),amenities:amenityState.post,amenity_description:byId('post-amenity-description').value.trim(),division:div,district:dist,upazila:upa,area,address:[area,upa,dist,div,byId('post-location').value.trim()].filter(Boolean).join(', '),bedrooms:Number(byId('post-beds').value||0),bathrooms:Number(byId('post-baths').value||0),rent_gender:byId('post-rent-gender').value,available_from:byId('post-available-from').value||null,latitude:lat,longitude:lng,owner_display_name:fullName,owner_contact_phone:phone,status:'pending'};
             const submit=e.submitter||document.querySelector('#post-ad-form button[type="submit"]');if(submit){submit.disabled=true;submit.dataset.oldText=submit.textContent;submit.textContent='বিজ্ঞাপন সংরক্ষণ হচ্ছে…';}
             try{
               const {data:property,error}=await toletSupabase.from('properties').insert(payload).select().single();if(error)throw error;
@@ -1426,7 +1458,7 @@
               }
               if(uploads.length){const {error:mediaErr}=await toletSupabase.from('property_media').insert(uploads);if(mediaErr)throw mediaErr;}
               alert('বিজ্ঞাপন Database-এ জমা হয়েছে। Admin অনুমোদন না দেওয়া পর্যন্ত এটি Public হবে না।');
-              byId('post-ad-form').reset();
+              byId('post-ad-form').reset();accumulatedPropertyPhotos=[];renderAccumulatedPhotos();byId('post-photo-preview').innerHTML='';byId('post-video-preview').innerHTML='';
               if(typeof loadOwnerProperties==='function')await loadOwnerProperties();
               switchTab('home');
             }catch(err){console.error(err);alert('বিজ্ঞাপন সংরক্ষণে সমস্যা: '+(err.message||'আবার চেষ্টা করুন')+'\nযদি Property তৈরি হয়ে গিয়ে Media upload ব্যর্থ হয়, Admin Panel থেকে Pending বিজ্ঞাপনটি পরীক্ষা করুন.');}
@@ -1493,35 +1525,29 @@
         async function loadOwnerRemovalRequests(){
           const box=byId('owner-removal-requests');if(!box||!toletSupabase)return;
           const {data:{user}}=await toletSupabase.auth.getUser();if(!user){box.innerHTML='';return;}
-          const {data,error}=await toletSupabase.from('property_removal_requests').select('id,requester_name,requester_phone,reason,details,status,created_at,properties(title)').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(30);
-          if(error){box.innerHTML='<p class="text-xs text-amber-700">Remove Request দেখতে Supabase SQL/RLS সেটআপ প্রয়োজন।</p>';return;}
-          box.innerHTML='<h4 class="font-extrabold mb-2">তোমার বিজ্ঞাপনের Remove Request</h4>'+(data||[]).map(r=>`<div class="border rounded-lg p-3 mb-2 text-sm"><div class="flex justify-between gap-2"><b>${escapeAccountText(r.properties?.title||'তোমার বিজ্ঞাপন')}</b><span class="text-xs font-bold">${escapeAccountText(r.status)}</span></div><div class="text-xs text-slate-600 mt-1">${escapeAccountText(r.requester_name)} · ${escapeAccountText(r.requester_phone)} · ${escapeAccountText(r.reason)}</div><p class="text-xs mt-1">${escapeAccountText(r.details||'')}</p></div>`).join('')||'<p class="text-xs text-slate-500">কোনো অনুরোধ নেই।</p>';
+          const {data,error}=await toletSupabase.from('property_removal_requests').select('id,property_id,requester_name,requester_phone,reason,details,status,created_at,properties(title,address,price,status)').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50);
+          if(error){box.innerHTML='<p class="text-xs text-amber-700">Remove Request লোড হয়নি: '+escapeAccountText(error.message)+'</p>';return;}
+          box.innerHTML='<h4 class="font-extrabold mb-2">তোমার বিজ্ঞাপনের Remove Request</h4>'+(data||[]).map(r=>`<div class="border rounded-lg p-3 mb-2 text-sm"><div class="flex flex-wrap justify-between gap-2"><b>${escapeAccountText(r.properties?.title||'তোমার বিজ্ঞাপন')}</b><span class="rounded-full px-2 py-1 text-xs font-bold bg-amber-100 text-amber-800">${escapeAccountText(r.status)}</span></div><div class="text-xs text-slate-600 mt-1">কারণ: ${escapeAccountText(r.reason)} · পাঠিয়েছেন: ${escapeAccountText(r.requester_name)} (${escapeAccountText(r.requester_phone)})</div><p class="text-xs mt-1">${escapeAccountText(r.details||'বিস্তারিত দেওয়া হয়নি')}</p><div class="text-xs text-slate-500 mt-1">বিজ্ঞাপনের ভাড়া: ৳${Number(r.properties?.price||0).toLocaleString('bn-BD')} · Ad Status: ${escapeAccountText(r.properties?.status||'')}</div></div>`).join('')||'<p class="text-xs text-slate-500">কোনো অনুরোধ নেই।</p>';
         }
         async function loadAdminRemovalRequests(){
           const box=byId('admin-removal-requests');if(!box||!toletSupabase)return;
-          const {data,error}=await toletSupabase.from('property_removal_requests').select('id,property_id,owner_id,requester_user_id,requester_name,requester_phone,reason,details,status,created_at,properties(title,address,price,owner_display_name,owner_contact_phone)').order('created_at',{ascending:false}).limit(100);
+          const {data,error}=await toletSupabase.from('property_removal_requests').select('id,property_id,owner_id,requester_name,requester_phone,reason,details,status,created_at,properties(title,address,price,status,owner_display_name,owner_contact_phone)').order('created_at',{ascending:false}).limit(100);
           if(error){box.textContent='অনুরোধ লোড হয়নি: '+error.message;return;}
-          box.innerHTML=(data||[]).map(r=>`<article class=\"border rounded-xl p-3 sm:p-4 space-y-2\"><div class=\"flex flex-wrap justify-between gap-2\"><div><div class=\"text-[11px] font-extrabold text-emerald-700\">REQUEST #${adminEscape(String(r.id).slice(0,8))}</div><b>${adminEscape(r.properties?.title||'বিজ্ঞাপন পাওয়া যায়নি')}</b><div class=\"text-xs text-slate-500\">Property ID: ${adminEscape(r.property_id||'—')} · ${adminEscape(r.properties?.address||'ঠিকানা নেই')}</div></div><span class=\"rounded-full bg-amber-100 text-amber-800 px-2 py-1 text-xs font-bold h-fit\">${adminEscape(r.status)}</span></div><div class=\"grid sm:grid-cols-2 gap-2 text-sm bg-slate-50 rounded-lg p-3\"><div><b>অনুরোধকারীর নাম:</b> ${adminEscape(r.requester_name)}</div><div><b>অনুরোধকারীর ফোন:</b> ${adminEscape(r.requester_phone)}</div><div><b>কারণ:</b> ${adminEscape(r.reason)}</div><div><b>বিজ্ঞাপনের ভাড়া:</b> ৳${Number(r.properties?.price||0).toLocaleString('bn-BD')}</div><div><b>মালিকের নাম:</b> ${adminEscape(r.properties?.owner_display_name||'তথ্য নেই')}</div><div><b>মালিকের ফোন:</b> ${adminEscape(r.properties?.owner_contact_phone||'তথ্য নেই')}</div><div class=\"sm:col-span-2 break-all\"><b>Owner ID:</b> ${adminEscape(r.owner_id||'—')}</div><div class=\"sm:col-span-2\"><b>বিস্তারিত:</b> ${adminEscape(r.details||'বিস্তারিত দেওয়া হয়নি')}</div><div class=\"sm:col-span-2 text-xs text-slate-500\">জমার সময়: ${adminEscape(r.created_at||'')}</div></div><div class=\"flex flex-wrap gap-2\"><button type=\"button\" onclick=\"viewAdminAd('${adminEscape(r.property_id)}')\" class=\"px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold\">সম্পর্কিত বিজ্ঞাপন দেখুন</button><button type=\"button\" onclick=\"setRemovalRequestStatus('${adminEscape(r.id)}','reviewed')\" class=\"px-3 py-2 rounded-lg border text-xs font-bold\">Reviewed</button><button type=\"button\" onclick=\"deleteAdFromRemovalRequest('${adminEscape(r.id)}','${adminEscape(r.property_id)}')\" class=\"px-3 py-2 rounded-lg bg-red-600 text-white text-xs font-bold\">বিজ্ঞাপন Delete</button></div></article>`).join('')||'<p class=\"text-sm text-slate-500\">কোনো Remove Request নেই।</p>';
+          box.innerHTML=(data||[]).map(r=>`<article class="border rounded-xl p-3"><div class="flex flex-wrap justify-between gap-2"><div><b>${adminEscape(r.properties?.title||'বিজ্ঞাপন')}</b><div class="text-xs text-slate-500 mt-1">Request ID: ${adminEscape(r.id)}</div></div><span class="rounded-full bg-amber-100 text-amber-800 px-2 py-1 text-xs font-bold">${adminEscape(r.status)}</span></div><div class="text-xs text-slate-700 mt-2">অনুরোধকারী: ${adminEscape(r.requester_name)} · ${adminEscape(r.requester_phone)} · ${adminEscape(r.reason)}</div><p class="text-xs mt-1">${adminEscape(r.details||'বিস্তারিত দেওয়া হয়নি')}</p><div class="text-xs text-slate-600 mt-2">বিজ্ঞাপনের ঠিকানা: ${adminEscape(r.properties?.address||'')} · ভাড়া: ৳${Number(r.properties?.price||0).toLocaleString('bn-BD')} · মালিক: ${adminEscape(r.properties?.owner_display_name||'')} · ${adminEscape(r.properties?.owner_contact_phone||'')}</div><div class="flex flex-wrap gap-2 mt-3"><button onclick="viewAdminAd('${adminEscape(r.property_id)}')" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold">এই বিজ্ঞাপনের সম্পূর্ণ তথ্য</button><button onclick="setRemovalRequestStatus('${adminEscape(r.id)}','reviewed')" class="px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-bold">Reviewed</button><button onclick="setRemovalRequestStatus('${adminEscape(r.id)}','resolved')" class="px-3 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold">Resolved</button><button onclick="deleteRemovalRequest('${adminEscape(r.id)}')" class="px-3 py-2 rounded-lg bg-red-600 text-white text-xs font-bold">Request Delete</button></div></article>`).join('')||'<p class="text-sm text-slate-500">কোনো Remove Request নেই।</p>';
         }
         async function setRemovalRequestStatus(id,status){
           const {error}=await toletSupabase.from('property_removal_requests').update({status}).eq('id',id);
-          if(error){alert('Status update হয়নি: '+error.message);return;}await loadAdminRemovalRequests();
+          if(error){alert('Status update হয়নি: '+error.message);return;}loadAdminRemovalRequests();
         }
-        async function deleteAdFromRemovalRequest(requestId,propertyId){
-          if(!toletAdminProfile?.user||!confirm('এই Remove Request-এর সঙ্গে যুক্ত বিজ্ঞাপনটি স্থায়ীভাবে Delete করবেন?'))return;
-          try{
-            const {data:media,error:mediaErr}=await toletSupabase.from('property_media').select('media_type,storage_path').eq('property_id',propertyId);
-            if(mediaErr)throw mediaErr;
-            for(const type of ['image','video']){const paths=(media||[]).filter(m=>m.media_type===type&&m.storage_path).map(m=>m.storage_path);if(paths.length){const {error}=await toletSupabase.storage.from(type==='image'?'property-images':'property-videos').remove(paths);if(error)console.warn('Storage cleanup:',error.message);}}
-            const {error:delMediaErr}=await toletSupabase.from('property_media').delete().eq('property_id',propertyId);if(delMediaErr)throw delMediaErr;
-            const {error:delPropErr}=await toletSupabase.from('properties').delete().eq('id',propertyId);if(delPropErr)throw delPropErr;
-            const {error:reqErr}=await toletSupabase.from('property_removal_requests').update({status:'resolved'}).eq('id',requestId);if(reqErr)throw reqErr;
-            alert('বিজ্ঞাপন Delete হয়েছে এবং Remove Request Resolved করা হয়েছে।');await loadAdminData();
-          }catch(err){alert('বিজ্ঞাপন Delete করা যায়নি: '+(err.message||err)+'। Supabase Admin RLS policy পরীক্ষা করতে হবে।');}
+        async function deleteRemovalRequest(id){
+          if(!confirm('শুধু এই Remove Request-টি Delete করবেন? বিজ্ঞাপনটি Delete হবে না।'))return;
+          const {error}=await toletSupabase.from('property_removal_requests').delete().eq('id',id);
+          if(error){alert('Request Delete হয়নি: '+error.message);return;}loadAdminRemovalRequests();
         }
         // Admin panel: role is rechecked from the profiles table and privileged operations use an Edge Function.
         let toletAdminProfile = null;
         let adminVerificationCache = [];
+        let adminNidFilter = "pending";
         let adminPropertyCache = [];
         let adminAdFilter = 'pending';
         const adminEscape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1564,7 +1590,7 @@
           ]);
           if(verifications.status==='fulfilled'){
             adminVerificationCache=verifications.value.items||[];
-            byId('admin-stat-nid').textContent=adminVerificationCache.filter(x=>x.status==='pending').length;
+            byId('admin-stat-nid').textContent=adminVerificationCache.filter(x=>String(x.status||'').toLowerCase()==='pending').length;
             renderAdminNidList();
           }else{byId('admin-nid-list').textContent='NID তালিকা লোড হয়নি: '+verifications.reason.message;}
           if(properties.status==='fulfilled'){
@@ -1580,17 +1606,17 @@
           loadAdminRemovalRequests();
           loadAdminSettings();
         }
-        let adminNidFilter='pending';
         function renderAdminNidList(){
-          const list=byId('admin-nid-list'); if(!list)return;
-          const statuses=['pending','verified','rejected'];
-          const labels={pending:'Pending / অপেক্ষমাণ',verified:'Approved / অনুমোদিত',rejected:'Rejected / বাতিল'};
-          const counts=Object.fromEntries(statuses.map(st=>[st,adminVerificationCache.filter(v=>String(v.status||'').toLowerCase()===st).length]));
-          const items=adminVerificationCache.filter(v=>String(v.status||'').toLowerCase()===adminNidFilter);
-          list.innerHTML=`<div class=\"grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4\">${statuses.map(st=>`<button type=\"button\" onclick=\"setAdminNidFilter('${st}')\" class=\"rounded-xl border p-3 text-left ${adminNidFilter===st?'bg-slate-900 text-white border-slate-900':'bg-white'}\"><span class=\"block text-xs font-bold\">${labels[st]}</span><b class=\"text-2xl\">${counts[st]}</b></button>`).join('')}</div>`+
-            (items.length?items.map(v=>`<div class=\"border rounded-xl p-3 flex flex-wrap items-center justify-between gap-3\"><div><b>${adminEscape(v.nid_name||'নাম নেই')}</b><div class=\"text-xs text-slate-500\">Status: ${adminEscape(v.status)} · ${adminEscape(v.created_at||'')}</div></div><button class=\"px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold\" onclick=\"viewAdminNid('${adminEscape(v.id)}')\">বিস্তারিত দেখুন</button></div>`).join(''):`<div class=\"rounded-xl border border-dashed p-5 text-center text-sm text-slate-500\">${labels[adminNidFilter]} তালিকায় কোনো আবেদন নেই।</div>`);
+          const list=byId('admin-nid-list'),filters=byId('admin-nid-filters');if(!list||!filters)return;
+          const keys=['pending','verified','rejected','all'],labels={pending:'Pending · অপেক্ষমাণ',verified:'Approved · অনুমোদিত',rejected:'Rejected · বাতিল',all:'সব আবেদন'};
+          const norm=v=>String(v||'').toLowerCase();
+          filters.innerHTML=keys.map(k=>{const count=k==='all'?adminVerificationCache.length:adminVerificationCache.filter(v=>norm(v.status)===k).length;const active=adminNidFilter===k;return `<button type="button" onclick="setAdminNidFilter('${k}')" class="px-3 py-2 rounded-xl border text-sm font-extrabold ${active?'bg-slate-900 text-white':'bg-white text-slate-700'}">${labels[k]} <span class="ml-1 rounded-full px-2 py-0.5 text-xs ${active?'bg-white/20':'bg-slate-100'}">${count}</span></button>`}).join('');
+          const rows=adminNidFilter==='all'?adminVerificationCache:adminVerificationCache.filter(v=>norm(v.status)===adminNidFilter);
+          if(!rows.length){list.innerHTML=`<div class="rounded-xl border border-dashed p-6 text-center text-slate-500">${labels[adminNidFilter]} ক্যাটাগরিতে কোনো আবেদন নেই।</div>`;return;}
+          const tags={pending:'bg-amber-100 text-amber-800',verified:'bg-emerald-100 text-emerald-800',rejected:'bg-red-100 text-red-800'};
+          list.innerHTML=rows.map(v=>{const st=norm(v.status);return `<div class="border rounded-xl p-3 flex flex-wrap items-center justify-between gap-3"><div><div class="flex flex-wrap items-center gap-2"><b>${adminEscape(v.nid_name||'নাম নেই')}</b><span class="rounded-full px-2.5 py-1 text-[11px] font-extrabold ${tags[st]||'bg-slate-100 text-slate-700'}">${adminEscape((st==='verified'?'APPROVED':st.toUpperCase())+' · '+(st==='verified'?'অনুমোদিত':st==='pending'?'অপেক্ষমাণ':st==='rejected'?'বাতিল':'অন্যান্য'))}</span></div><div class="text-xs text-slate-500 mt-1">${adminEscape(v.created_at||'')}</div></div><button class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold" onclick="viewAdminNid('${adminEscape(v.id)}')">বিস্তারিত দেখুন</button></div>`}).join('');
         }
-        function setAdminNidFilter(status){adminNidFilter=['pending','verified','rejected'].includes(status)?status:'pending';renderAdminNidList();}
+        function setAdminNidFilter(value){adminNidFilter=value;renderAdminNidList();}
         async function viewAdminNid(id){
           const box=byId('admin-nid-detail');box.classList.remove('hidden');box.textContent='নিরাপদে তথ্য লোড হচ্ছে…';
           try{
@@ -1661,7 +1687,6 @@
                 <div class="rounded-lg bg-slate-50 p-3"><span class="text-xs text-slate-500">বিজ্ঞাপন Status</span><div class="font-bold">${adminEscape(p.status||'')}</div></div>
               </div>
               <div class="mt-3 rounded-xl border p-3"><h4 class="font-extrabold mb-2">বিজ্ঞাপনের বিস্তারিত বিবরণ</h4><p class="text-sm whitespace-pre-wrap text-slate-700">${adminEscape(p.description||'বিবরণ দেওয়া হয়নি')}</p></div>
-              <div class="mt-3 rounded-xl border p-3"><h4 class="font-extrabold mb-2">বাসার সুবিধাসমূহ</h4><div class="flex flex-wrap gap-2">${(Array.isArray(p.amenities)?p.amenities:[]).map(a=>`<span class="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">${adminEscape(a)}</span>`).join('')||'সুবিধা দেওয়া হয়নি'}</div><p class="text-sm mt-2">${adminEscape(p.amenity_description||'')}</p></div>
               <div class="mt-3 rounded-xl border p-3"><h4 class="font-extrabold mb-2">মালিকের তথ্য</h4><div class="grid sm:grid-cols-2 gap-2 text-sm"><div>নাম: <b>${adminEscape(ownerName)}</b></div><div>ফোন: <b>${adminEscape(ownerPhone)}</b></div><div>Owner ID: <span class="font-mono text-xs">${adminEscape(p.owner_id||'')}</span></div><div>NID Status: <b>${adminEscape(owner?.verification_status||'তথ্য পাওয়া যায়নি')}</b></div></div>${ownerError?`<p class="text-xs text-amber-700 mt-2">Owner profile detail: ${adminEscape(ownerError.message)}</p>`:''}</div>
               <div class="mt-3"><h4 class="font-extrabold mb-2">বাসার ছবি (${cleanImages.length})</h4>${cleanImages.length?`<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${cleanImages.map((u,i)=>`<a href="${adminEscape(u)}" target="_blank" rel="noopener"><img src="${adminEscape(u)}" alt="Property photo ${i+1}" class="w-full h-36 sm:h-44 object-cover rounded-lg border"></a>`).join('')}</div>`:'<p class="text-sm text-slate-500">ছবি পাওয়া যায়নি।'+(mediaError?' Media table: '+adminEscape(mediaError.message):'')+'</p>'}</div>
               <div class="mt-3"><h4 class="font-extrabold mb-2">বাসার ভিডিও (${cleanVideos.length})</h4>${cleanVideos.length?`<div class="grid sm:grid-cols-2 gap-3">${cleanVideos.map(u=>`<video src="${adminEscape(u)}" controls playsinline preload="metadata" class="w-full rounded-lg bg-black max-h-72"></video>`).join('')}</div>`:'<p class="text-sm text-slate-500">ভিডিও সংযুক্ত করা হয়নি বা লোড করা যায়নি।</p>'}</div>
