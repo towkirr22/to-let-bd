@@ -199,7 +199,7 @@
                     <i class="fa-solid fa-house mr-1.5"></i>হোম
                 </button>
                 <button onclick="switchTab('listings')" id="nav-listings" class="nav-link px-4 py-2 rounded-lg transition-all text-slate-600 hover:text-emerald-700 hover:bg-white/60">
-                    <i class="fa-solid fa-building mr-1.5"></i>সকল বাসা
+                    <i class="fa-solid fa-building mr-1.5"></i>All Ads
                 </button>
                 <button onclick="switchTab('post-ad')" id="nav-post-ad" class="nav-link px-4 py-2 rounded-lg transition-all text-slate-600 hover:text-emerald-700 hover:bg-white/60">
                     <i class="fa-solid fa-plus-circle mr-1.5"></i>বিজ্ঞাপন দিন
@@ -284,7 +284,7 @@
                 
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-building-circle-check text-emerald-600"></i> সকল ভেরিফাইড প্রপার্টি তালিকা
+                        <i class="fa-solid fa-building-circle-check text-emerald-600"></i> All Ads
                     </h2>
                     
                     <!-- Listings Filter Bar -->
@@ -400,6 +400,13 @@
                                 <label class="block text-xs font-bold text-slate-700"><span id="post-price-label">মাসিক ভাড়া (৳)</span> *<input type="number" id="post-price" required min="1" placeholder="১৫০০০" class="mt-1 w-full p-2.5 border border-slate-300 rounded-lg text-sm"></label>
                             </div>
                             <p id="hotel-price-hint" class="text-xs text-slate-500">হোটেল নির্বাচন করলে ভাড়া প্রতি রাত হিসেবে গণনা হবে; অন্যান্য ক্যাটাগরির ভাড়া মাসিক হিসেবে দেখানো হবে।</p>
+                            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-2">
+                              <h4 class="font-bold text-sm text-slate-900"><i class="fa-solid fa-phone text-emerald-700 mr-1"></i> যোগাযোগের তথ্য</h4>
+                              <label class="block text-xs font-bold text-slate-700">বিজ্ঞাপনে দেখানোর ফোন নম্বর *
+                                <input type="tel" id="post-owner-phone" required inputmode="tel" autocomplete="tel" pattern="01[3-9][0-9]{8}" maxlength="11" placeholder="01XXXXXXXXX" class="mt-1 w-full p-2.5 border border-slate-300 rounded-lg bg-white text-sm">
+                              </label>
+                              <p class="text-[11px] text-slate-600">এই নম্বরটি বিজ্ঞাপনের বিস্তারিত পেজে দেখা যাবে এবং ভাড়াটিয়ারা কল/WhatsApp করতে পারবেন।</p>
+                            </div>
                             <div class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 space-y-3">
                                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-map-location-dot text-emerald-700 mr-1"></i> বাসার ঠিকানা নির্বাচন করুন</h4>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -601,6 +608,10 @@
                                         </span>
                                     </div>
                                 </div>
+                                <div class="rounded-lg bg-slate-50 border p-3">
+                                  <div class="text-[11px] text-slate-500 font-bold mb-1">যোগাযোগের ফোন নম্বর</div>
+                                  <a id="detail-owner-phone" href="#" class="font-extrabold text-emerald-800 text-base">--</a>
+                                </div>
 
                             </div>
 
@@ -719,73 +730,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
-        // Global Property Store (Simulated Database)
-        let properties = [
-            {
-                id: 1,
-                title: "অভিজাত ৩ বেডরুমের ফ্যামিলি অ্যাপার্টমেন্ট ভাড়া",
-                category: "Family",
-                price: 25000,
-                location: "চাটমোহর সদর, পাবনা",
-                bedrooms: 3,
-                bathrooms: 3,
-                image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
-                ownerName: "মো: আরিফুল ইসলাম",
-                ownerPhone: "01700000000",
-                lat: 24.0864,
-                lng: 89.2831,
-                status: "approved", // approved | pending | rejected
-                verified: true
-            },
-            {
-                id: 2,
-                title: "অ্যাটাচড বারান্দা ও বাথসহ সিঙ্গেল মেস রুম",
-                category: "Bachelor",
-                price: 4500,
-                location: "মেডিকেল মোড়, রংপুর",
-                bedrooms: 1,
-                bathrooms: 1,
-                image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80",
-                ownerName: "তানভীর আহমেদ",
-                ownerPhone: "01811112233",
-                lat: 25.7439,
-                lng: 89.2752,
-                status: "approved",
-                verified: true
-            },
-            {
-                id: 3,
-                title: "দক্ষিণমুখী আলো-বাতাসপূর্ণ ড্রয়িং সহ সাবলেট রুম",
-                category: "Sublet",
-                price: 7500,
-                location: "লালমনিরহাট টাউন",
-                bedrooms: 1,
-                bathrooms: 1,
-                image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-                ownerName: "রাশেদুল হাসান",
-                ownerPhone: "01922334455",
-                lat: 25.9167,
-                lng: 89.4500,
-                status: "approved",
-                verified: true
-            },
-            {
-                id: 4,
-                title: "মেইন রোড সংলগ্ন প্রাইম কমার্শিয়াল শোরুম/অফিস স্পেস",
-                category: "Commercial",
-                price: 35000,
-                location: "ধানমন্ডি ২৭, ঢাকা",
-                bedrooms: 0,
-                bathrooms: 2,
-                image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
-                ownerName: "আজমল হোসেন",
-                ownerPhone: "01688990011",
-                lat: 23.7509,
-                lng: 90.3754,
-                status: "pending",
-                verified: true
-            }
-        ];
+        // Live property store: no built-in/demo advertisements.
+        let properties = [];
 
 
         // Bangladesh location hierarchy loaded from a structured division/district/upazila/union dataset.
@@ -872,7 +818,7 @@
             loadBangladeshGeo();
             const categorySelect=document.getElementById('post-category');
             if(categorySelect){const updatePriceLabel=()=>{const hotel=categorySelect.value==='Hotel';document.getElementById('post-price-label').textContent=hotel?'প্রতি রাতের রুম ভাড়া (৳)':'মাসিক ভাড়া (৳)';document.getElementById('post-price').placeholder=hotel?'২৫০০':'১৫০০০';};categorySelect.addEventListener('change',updatePriceLabel);updatePriceLabel();}
-            const savedProps=localStorage.getItem('toletbd_properties_v3');if(savedProps){try{properties=JSON.parse(savedProps);}catch(e){}}
+            const savedProps=localStorage.getItem('toletbd_properties_v3');if(savedProps){try{const cached=JSON.parse(savedProps);properties=Array.isArray(cached)?cached.filter(p=>!([1,2,3,4].includes(Number(p.id))&&!p.source)):[];localStorage.setItem('toletbd_properties_v3',JSON.stringify(properties));}catch(e){properties=[];}}
             properties.forEach((p,i)=>{if(!p.createdAt)p.createdAt=new Date(Date.now()-i*86400000).toISOString();if(!p.images)p.images=[p.image,'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=900&q=80','https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80','https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80'];if(!p.adStatus)p.adStatus='available';});refreshAreaOptions();
             ['home-area','home-min-price','home-filter-price','home-sort'].forEach(id => {
                 const el = document.getElementById(id);
@@ -1182,6 +1128,12 @@
             document.getElementById('detail-beds').innerText = prop.bedrooms;
             document.getElementById('detail-baths').innerText = prop.bathrooms;
             document.getElementById('detail-owner-name').innerText = prop.ownerName;
+            const ownerPhone=String(prop.ownerPhone||'').replace(/[^0-9+]/g,'');
+            const phoneLink=document.getElementById('detail-owner-phone');
+            phoneLink.textContent=ownerPhone||'ফোন নম্বর দেওয়া হয়নি';
+            phoneLink.href=ownerPhone?'tel:'+ownerPhone:'#';
+            phoneLink.classList.toggle('text-slate-400',!ownerPhone);
+
             lightboxImages=(prop.images&&prop.images.length?prop.images:[prop.image]).filter(Boolean);
             const mainPhoto=document.getElementById('detail-main-img');
             mainPhoto.src=lightboxImages[0]||prop.image||'';
@@ -1201,8 +1153,14 @@
             document.getElementById('btn-whatsapp-owner').setAttribute('aria-disabled',prop.adStatus==='rented');
             const thumbs=document.getElementById('detail-thumbnails');thumbs.innerHTML=lightboxImages.map((src,i)=>`<img src="${src}" alt="বাসার ছবি ${i+1}" onclick="openPhotoLightbox(${i})" class="h-20 sm:h-24 w-full object-cover rounded-lg border cursor-zoom-in hover:opacity-80">`).join('');
 
-            document.getElementById('btn-call-owner').href = `tel:${prop.ownerPhone}`;
-            document.getElementById('btn-whatsapp-owner').href = `https://wa.me/88${prop.ownerPhone}`;
+            const callBtn=document.getElementById('btn-call-owner'),waBtn=document.getElementById('btn-whatsapp-owner');
+            callBtn.href=ownerPhone?'tel:'+ownerPhone:'#';
+            const waNumber=ownerPhone.replace(/^\+/,'').replace(/^0/,'88');
+            waBtn.href=ownerPhone?'https://wa.me/'+waNumber:'#';
+            callBtn.classList.toggle('opacity-40',!ownerPhone||prop.adStatus==='rented');
+            waBtn.classList.toggle('opacity-40',!ownerPhone||prop.adStatus==='rented');
+            callBtn.setAttribute('aria-disabled',String(!ownerPhone||prop.adStatus==='rented'));
+            waBtn.setAttribute('aria-disabled',String(!ownerPhone||prop.adStatus==='rented'));
 
             switchTab('property-details');
 
@@ -1446,6 +1404,7 @@
             const lat=coords('picked-lat'),lng=coords('picked-lng');
             const fullName=byId('post-owner-name')?.value?.trim()||user.user_metadata?.full_name||'বাড়ির মালিক';
             const phone=byId('post-owner-phone')?.value?.trim()||user.phone||'';
+            if(!/^01[3-9]\d{8}$/.test(phone)){alert('সঠিক ১১ ডিজিটের বাংলাদেশি মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)।');byId('post-owner-phone')?.focus();return;}
             const payload={owner_id:user.id,title:byId('post-title').value.trim(),category:byId('post-category').value,price:Number(byId('post-price').value),description:byId('post-description').value.trim(),amenities:amenityState.post,amenity_description:byId('post-amenity-description').value.trim(),division:div,district:dist,upazila:upa,area,address:[area,upa,dist,div,byId('post-location').value.trim()].filter(Boolean).join(', '),bedrooms:Number(byId('post-beds').value||0),bathrooms:Number(byId('post-baths').value||0),rent_gender:byId('post-rent-gender').value,available_from:byId('post-available-from').value||null,latitude:lat,longitude:lng,owner_display_name:fullName,owner_contact_phone:phone,status:'pending'};
             const submit=e.submitter||document.querySelector('#post-ad-form button[type="submit"]');if(submit){submit.disabled=true;submit.dataset.oldText=submit.textContent;submit.textContent='বিজ্ঞাপন সংরক্ষণ হচ্ছে…';}
             try{
